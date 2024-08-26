@@ -241,7 +241,7 @@ class CEMTaggerApp:
 
         tags_simples = { 
             "segun_la_actitud_del_hablante": {
-            "A1": ["Enunciativas afirmativas","Enunciativas negativas","Interrogativas directas totales con sentido literal","Interrogativas directas parciales con sentido literal","no aplica"
+            "A1": ["Enunciativas afirmativas","Enunciativas negativas","Interrogativas directas totales con sentido literal","Interrogativas directas parciales con sentido literal"
             ],
             "A2": ["Interrogativas disyuntivas","Exclamativas","Exhortativas"
             ],
@@ -257,7 +257,7 @@ class CEMTaggerApp:
             },
 
             "segun_la_naturaleza_del_predicado": {
-            "A1": ["Impersonales con el verbo 'haber'","Copulativas","Atributivas","Transitivas","Intransitivas","no aplica"
+            "A1": ["Impersonales con el verbo 'haber'","Copulativas","Atributivas","Transitivas","Intransitivas"
             ],
             "A2": ["Reflexivas","Impersonales con el verbo 'haber'","Impersonales con verbos unipersonales y de fenómenos atmosféricos","Impersonales y pasivas reflejas","Desiderativas"
             ],
@@ -270,7 +270,7 @@ class CEMTaggerApp:
         oraciones_compuestas = {
             "Copulativas": {
                 "A1": 
-                    ["Con la conjunción 'y'","Negativas con la conjunción 'ni'","no aplica"],
+                    ["Con la conjunción 'y'","Negativas con la conjunción 'ni'"],
                 "A2": ["Sustitución de 'y' por 'e'"],
                 "B1": [],
                 "B2": ["Negativas con la conjunción 'ni'"],
@@ -278,21 +278,21 @@ class CEMTaggerApp:
                     ["Asíndeton","Polisíndeton"]
             },
             "Adversativas": {
-                "A1": ["Con la conjunción 'pero'","no aplica"],
+                "A1": ["Con la conjunción 'pero'"],
                 "A2": [],
                 "B1": ["Sin embargo","Aunque"],
                 "B2": ["Sino","No obstante"],
                 "C1": []
             },
             "Disyuntivas": {
-                "A1": ["Con la conjunción 'o'","no aplica"],
+                "A1": ["Con la conjunción 'o'"],
                 "A2": ["Sustitución de 'o' por 'u'"],
                 "B1": [],
                 "B2": [],
                 "C1": []
             },
             "Distributivas": {
-                "A1": ["Con uno... otro...","no aplica"],
+                "A1": ["Con uno... otro..."],
                 "A2": [],
                 "B1": [],
                 "B2": [],
@@ -330,11 +330,6 @@ class CEMTaggerApp:
         self.var_simple2.set("Según la naturaleza del predicado")
         self.menu_simple2 = tk.OptionMenu(self.tagging_window, self.var_simple2, *simples_predicado)
         self.menu_simple2.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
-
-        self.var_simple3 = tk.StringVar(self.tagging_window)
-        self.var_simple3.set("hibridación")
-        self.menu_simple3 = tk.OptionMenu(self.tagging_window, self.var_simple3, "hibridación")
-        self.menu_simple3.grid(row=4, column=0, padx=10, pady=10, sticky="ew")
 
 
         # Crear los cuadros desplegables para Oraciones Compuestas
@@ -381,11 +376,16 @@ class CEMTaggerApp:
         # escribir en el archivo json
         with open("oraciones.json", "r") as read_file:
             data = json.load(read_file)
-
-        if simple1 != "Según la actitud del hablante":
-            data["oraciones"]["simples"][id] = {"ADH": simple1}
-        if simple2 != "Según la naturaleza del predicado":
-            data["oraciones"]["simples"][id] = {"NDP": simple2}
+            if simple1 != "Según la actitud del hablante" and simple2 != "Según la naturaleza del predicado":
+                #error, solo se debe seleccionar una opcion
+                messagebox.showerror("Error", "Solo se debe seleccionar una opción")
+                #se cierra la ventana
+                self.tagging_window.destroy()
+            else:    
+                if simple1 != "Según la actitud del hablante":
+                    data["oraciones"]["simples"][id] = {"ADH": simple1}
+                if simple2 != "Según la naturaleza del predicado":
+                    data["oraciones"]["simples"][id] = {"NDP": simple2}
 
         
         with open("oraciones.json", "w") as write_file:
@@ -414,16 +414,22 @@ class CEMTaggerApp:
             # escribir en el archivo json
             with open("oraciones.json", "r") as read_file:
                 data = json.load(read_file)
-
-            if compuesta1 != "Copulativas":
-                data["oraciones"]["compuestas"][id] = {"Cop": compuesta1}
-            if compuesta2 != "Adversativas":
-                data["oraciones"]["compuestas"][id] = {"Adv": compuesta2}
-            if compuesta3 != "Disyuntivas":
-                data["oraciones"]["compuestas"][id] = {"Disy": compuesta3}
-            if compuesta4 != "Distributivas":
-                data["oraciones"]["compuestas"][id] = {"Dist": compuesta4}
-        
+                #Si se modifican dos campos hay error
+                if compuesta1 != "Copulativas" and compuesta2 != "Adversativas" and compuesta3 != "Disyuntivas" and compuesta4 != "Distributivas":
+                    #error, solo se debe seleccionar una opcion
+                    messagebox.showerror("Error", "Solo se debe seleccionar una opción")
+                    #se cierra la ventana
+                    self.tagging_window.destroy()
+                else:
+                    if compuesta1 != "Copulativas":
+                        data["oraciones"]["compuestas"][id] = {"Cop": compuesta1}
+                    if compuesta2 != "Adversativas":
+                        data["oraciones"]["compuestas"][id] = {"Adv": compuesta2}
+                    if compuesta3 != "Disyuntivas":
+                        data["oraciones"]["compuestas"][id] = {"Disy": compuesta3}
+                    if compuesta4 != "Distributivas":
+                        data["oraciones"]["compuestas"][id] = {"Dist": compuesta4}
+                
 
                 
     

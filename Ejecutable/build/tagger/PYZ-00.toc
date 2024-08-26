@@ -1,4 +1,4 @@
-('/home/ospina/RatosLibres/NLP/PrototipoEtiquetadoReferentes/githubProyecto/build/tagger/PYZ-00.pyz',
+('/home/ospina/RatosLibres/NLP/PrototipoEtiquetadoReferentes/githubProyecto/CEM_tagger/Ejecutable/build/tagger/PYZ-00.pyz',
  [('_compat_pickle',
    '/home/ospina/anaconda3/lib/python3.10/_compat_pickle.py',
    'PYMODULE'),
