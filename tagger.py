@@ -70,14 +70,157 @@ class CEMTaggerApp:
         # Crear el botón para convertir XML a JSON
         self.convert_button = tk.Button(button_frame, text="Convertir XML a JSON", command=self.convert_xml_to_json, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b082", fg="white")
         self.convert_button.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+
+                    # Crear el botón para etiquetar oraciones
+        self.tag_sentences_button = tk.Button(button_frame, text="Etiquetar Parrafos", command=self.tag_paragraphs, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.tag_sentences_button.grid(row=0, column=1, columnspan=2, padx=10, pady=10, sticky="ew")
     
             # Crear el botón para etiquetar oraciones
         self.tag_sentences_button = tk.Button(button_frame, text="Etiquetar Oraciones", command=self.tag_sentences, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
-        self.tag_sentences_button.grid(row=0, column=1, columnspan=2, padx=10, pady=10, sticky="ew")
+        self.tag_sentences_button.grid(row=1, column=1, columnspan=2, padx=10, pady=10, sticky="ew")
 
 
 
 
+    def tag_paragraphs(self):
+
+        if not hasattr(self, 'selected_file_path') or not self.selected_file_path:
+            messagebox.showwarning("Archivo No Seleccionado", "Por favor, seleccione un archivo XML antes de etiquetar.")
+            return
+        
+        # Algoritmo para enumerar los párrafos del xml añadiendo un id
+        tree = ET.parse(self.selected_file_path)
+        root = tree.getroot()
+        id = 1
+
+        for paragraph in root.findall('paragraph'):
+            paragraph.set('id', str(id))
+            id += 1
+
+        #Se crea un archivo xml con los párrafos enumerados
+        tree.write('paragraphs.xml')
+
+        #Se crea la ventana de etiquetado de párrafos
+        self.tagging_window_paragraphs = tk.Toplevel(self.root)
+        self.tagging_window_paragraphs.title("Etiquetado de Parrafos")
+
+        # Se cuentan cuantos parrafos hay en el archivo
+        num_parrafos = 0
+        for paragraph in root.findall('paragraph'):
+            num_parrafos += 1
+
+        # Se pone la metadata en la ventana de etiquetado
+        metadata_frame = tk.Frame(self.tagging_window_paragraphs)
+        metadata_frame.pack(pady=8, padx=21, fill=tk.X)
+    
+
+        # Configurar el grid de la columna para que todos los campos tengan el mismo tamaño
+        metadata_frame.columnconfigure(1, weight=1)  # Hacer que la segunda columna expanda
+
+        # Crear campos para mostrar metadata
+        self.metadata_fields = {}
+        metadata_labels = {
+            "Título": "tittle",
+            "ID del Documento": "number",
+            "Nivel": "level",
+            "Género Textual": "textual_genre",
+            "País": "country",
+            "Responsable": "responsable",
+            "Superestructura": "superestructura"  
+        }
+
+        for row, (label, field) in enumerate(metadata_labels.items()):
+            # Etiqueta
+            tk.Label(metadata_frame, text=f"{label}:", font=("Arial", 8)).grid(row=row, column=0, sticky="w", padx=5, pady=2)
+            # Campo de entrada
+            entry = tk.Entry(metadata_frame, font=("Arial", 8))
+            entry.grid(row=row, column=1, padx=5, pady=1, sticky="ew")
+            entry.config(state=tk.DISABLED)
+            self.metadata_fields[field] = entry
+
+
+        self.display_metadata()
+
+        # Crear un marco principal para organizar los elementos
+        main_frame = tk.Frame(self.tagging_window_paragraphs)
+        main_frame.pack(fill="both", expand=True)
+
+        # Configurar main_frame para permitir la expansión de filas y columnas
+        main_frame.grid_columnconfigure(0, weight=2)
+
+        # Crear un marco para los botones de párrafos
+        button_frame = tk.Frame(main_frame)
+        button_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+
+        # Extraer los párrafos
+        paragraphs = self.extraer_parrafos('paragraphs.xml')
+
+        # Crear un canvas para contener los botones
+        canvas = tk.Canvas(button_frame)
+        scrollbar_y = tk.Scrollbar(button_frame, orient="vertical", command=canvas.yview)
+        scrollbar_x = tk.Scrollbar(button_frame, orient="horizontal", command=canvas.xview)
+
+        self.scrollable_frame = tk.Frame(canvas)
+        self.scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        canvas.config(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar_y.pack(side="right", fill="y")
+        scrollbar_x.pack(side="bottom", fill="x")
+
+        #lista para almacenar los identificadores de los parrafos
+        self.identificadores = []
+
+        #Agregar un campo de texto para mostrar los identificadores de los parrafos etiquetados
+        self.text_identificadores = tk.Text(main_frame, height=8, width=50, font=("Arial", 12))
+        self.text_identificadores.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+
+        #boton terminar
+        self.btn_terminar = tk.Button(self.tagging_window_paragraphs, text="Terminar", command=self.teminar_parrafo, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_terminar.pack(pady=5)
+
+        for paragraph in paragraphs:
+            # Crear un botón dentro del frame scrollable
+            self.botones_parrafo = tk.Button(self.scrollable_frame, text=paragraph, anchor="w", command=lambda text=paragraph: self.procesar_parrafo(text))
+            self.botones_parrafo.pack(fill="both", expand=True)
+        
+        
+
+
+        
+        
+        
+
+
+
+
+        return 1
+    
+    def procesar_parrafo(self, parrafo):
+        return 1
+    
+    def teminar_parrafo(self):
+        return 1
+    
+    def extraer_parrafos(self,ruta_archivo):
+        # Extraer los párrafos del archivo XML
+        tree = ET.parse(ruta_archivo)
+        root = tree.getroot()
+        parrafos = []
+
+        for paragraph in root.findall('.//paragraph'):
+            parrafo_texto = []
+            for token in paragraph.findall('.//token'):
+                palabra = token.get('form')
+                parrafo_texto.append(palabra)
+            
+            id = paragraph.get('id')
+            parrafo = "(id="+id + ") - " + ' '.join(parrafo_texto) # Unir las palabras en una sola cadena
+            parrafos.append(parrafo)
+        
+        return parrafos
 
 
     def tag_sentences(self):
@@ -212,7 +355,7 @@ class CEMTaggerApp:
                     forma = token.get('form')
                     palabras.append(forma)
                 id = sentence.get('id')
-                oracion = ' '.join(palabras)+" - (id=" + id + ")"# Unir las palabras en una sola cadena
+                oracion = "(id="+id + ") - " + ' '.join(palabras) # Unir las palabras en una sola cadena
                 oraciones.append(oracion)
 
         return oraciones
@@ -220,7 +363,7 @@ class CEMTaggerApp:
     
     def procesar_oracion(self, oracion):
         # Extraer el identificador de la oración
-        self.identificador = oracion.split("id=")[1].replace(")","")
+        self.identificador = oracion.split(")")[0].replace("(id=","")
 
         # Crear la ventana de etiquetado de oraciones
         self.tagging_window = tk.Toplevel(self.root)
@@ -241,7 +384,7 @@ class CEMTaggerApp:
 
         tags_simples = { 
             "segun_la_actitud_del_hablante": {
-            "A1": ["Enunciativas afirmativas","Enunciativas negativas","Interrogativas directas totales con sentido literal","Interrogativas directas parciales con sentido literal"
+            "A1": ["Enunciativas afirmativas","Enunciativas negativas","Interrogativas directas totales con sentido literal","Interrogativas directas parciales con sentido literal","no aplica"
             ],
             "A2": ["Interrogativas disyuntivas","Exclamativas","Exhortativas"
             ],
@@ -257,7 +400,7 @@ class CEMTaggerApp:
             },
 
             "segun_la_naturaleza_del_predicado": {
-            "A1": ["Impersonales con el verbo 'haber'","Copulativas","Atributivas","Transitivas","Intransitivas"
+            "A1": ["Impersonales con el verbo 'haber'","Copulativas","Atributivas","Transitivas","Intransitivas","no aplica"
             ],
             "A2": ["Reflexivas","Impersonales con el verbo 'haber'","Impersonales con verbos unipersonales y de fenómenos atmosféricos","Impersonales y pasivas reflejas","Desiderativas"
             ],
@@ -270,7 +413,7 @@ class CEMTaggerApp:
         oraciones_compuestas = {
             "Copulativas": {
                 "A1": 
-                    ["Con la conjunción 'y'","Negativas con la conjunción 'ni'"],
+                    ["Con la conjunción 'y'","Negativas con la conjunción 'ni'","no aplica"],
                 "A2": ["Sustitución de 'y' por 'e'"],
                 "B1": [],
                 "B2": ["Negativas con la conjunción 'ni'"],
@@ -278,21 +421,21 @@ class CEMTaggerApp:
                     ["Asíndeton","Polisíndeton"]
             },
             "Adversativas": {
-                "A1": ["Con la conjunción 'pero'"],
+                "A1": ["Con la conjunción 'pero'","no aplica"],
                 "A2": [],
                 "B1": ["Sin embargo","Aunque"],
                 "B2": ["Sino","No obstante"],
                 "C1": []
             },
             "Disyuntivas": {
-                "A1": ["Con la conjunción 'o'"],
+                "A1": ["Con la conjunción 'o'","no aplica"],
                 "A2": ["Sustitución de 'o' por 'u'"],
                 "B1": [],
                 "B2": [],
                 "C1": []
             },
             "Distributivas": {
-                "A1": ["Con uno... otro..."],
+                "A1": ["Con uno... otro...","no aplica"],
                 "A2": [],
                 "B1": [],
                 "B2": [],
@@ -330,6 +473,11 @@ class CEMTaggerApp:
         self.var_simple2.set("Según la naturaleza del predicado")
         self.menu_simple2 = tk.OptionMenu(self.tagging_window, self.var_simple2, *simples_predicado)
         self.menu_simple2.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
+
+        self.var_simple3 = tk.StringVar(self.tagging_window)
+        self.var_simple3.set("hibridación")
+        self.menu_simple3 = tk.OptionMenu(self.tagging_window, self.var_simple3, "hibridación")
+        self.menu_simple3.grid(row=4, column=0, padx=10, pady=10, sticky="ew")
 
 
         # Crear los cuadros desplegables para Oraciones Compuestas
@@ -376,16 +524,11 @@ class CEMTaggerApp:
         # escribir en el archivo json
         with open("oraciones.json", "r") as read_file:
             data = json.load(read_file)
-            if simple1 != "Según la actitud del hablante" and simple2 != "Según la naturaleza del predicado":
-                #error, solo se debe seleccionar una opcion
-                messagebox.showerror("Error", "Solo se debe seleccionar una opción")
-                #se cierra la ventana
-                self.tagging_window.destroy()
-            else:    
-                if simple1 != "Según la actitud del hablante":
-                    data["oraciones"]["simples"][id] = {"ADH": simple1}
-                if simple2 != "Según la naturaleza del predicado":
-                    data["oraciones"]["simples"][id] = {"NDP": simple2}
+
+        if simple1 != "Según la actitud del hablante":
+            data["oraciones"]["simples"][id] = {"ADH": simple1}
+        if simple2 != "Según la naturaleza del predicado":
+            data["oraciones"]["simples"][id] = {"NDP": simple2}
 
         
         with open("oraciones.json", "w") as write_file:
@@ -414,22 +557,16 @@ class CEMTaggerApp:
             # escribir en el archivo json
             with open("oraciones.json", "r") as read_file:
                 data = json.load(read_file)
-                #Si se modifican dos campos hay error
-                if compuesta1 != "Copulativas" and compuesta2 != "Adversativas" and compuesta3 != "Disyuntivas" and compuesta4 != "Distributivas":
-                    #error, solo se debe seleccionar una opcion
-                    messagebox.showerror("Error", "Solo se debe seleccionar una opción")
-                    #se cierra la ventana
-                    self.tagging_window.destroy()
-                else:
-                    if compuesta1 != "Copulativas":
-                        data["oraciones"]["compuestas"][id] = {"Cop": compuesta1}
-                    if compuesta2 != "Adversativas":
-                        data["oraciones"]["compuestas"][id] = {"Adv": compuesta2}
-                    if compuesta3 != "Disyuntivas":
-                        data["oraciones"]["compuestas"][id] = {"Disy": compuesta3}
-                    if compuesta4 != "Distributivas":
-                        data["oraciones"]["compuestas"][id] = {"Dist": compuesta4}
-                
+
+            if compuesta1 != "Copulativas":
+                data["oraciones"]["compuestas"][id] = {"Cop": compuesta1}
+            if compuesta2 != "Adversativas":
+                data["oraciones"]["compuestas"][id] = {"Adv": compuesta2}
+            if compuesta3 != "Disyuntivas":
+                data["oraciones"]["compuestas"][id] = {"Disy": compuesta3}
+            if compuesta4 != "Distributivas":
+                data["oraciones"]["compuestas"][id] = {"Dist": compuesta4}
+        
 
                 
     
@@ -479,7 +616,6 @@ class CEMTaggerApp:
     def display_metadata(self):
         try:
             with open(self.selected_file_path, 'r', encoding='utf-8') as xml_file:
-                print(self.selected_file_path)
                 xml_content = xml_file.read()
                 data_dict = xmltodict.parse(xml_content, encoding='utf-8', process_namespaces=True)
                 self.title = data_dict['document']['metadata']['tittle']
