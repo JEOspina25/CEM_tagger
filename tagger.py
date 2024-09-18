@@ -87,6 +87,12 @@ class CEMTaggerApp:
         if not hasattr(self, 'selected_file_path') or not self.selected_file_path:
             messagebox.showwarning("Archivo No Seleccionado", "Por favor, seleccione un archivo XML antes de etiquetar.")
             return
+
+
+        #Si existe el archivo "pivot.json" se elimina
+        if os.path.exists("pivot.json"):
+            os.remove("pivot.json")
+
         
         # Algoritmo para enumerar los párrafos del xml añadiendo un id
         tree = ET.parse(self.selected_file_path)
@@ -94,7 +100,7 @@ class CEMTaggerApp:
         id = 1
 
         for paragraph in root.findall('paragraph'):
-            paragraph.set('id', str(id))
+            paragraph.set('id', "p"+str(id))
             id += 1
 
         #Se crea un archivo xml con los párrafos enumerados
@@ -202,7 +208,7 @@ class CEMTaggerApp:
     def procesar_parrafo(self, parrafo):
         
         # Extraer el identificador del párrafo
-        self.identificador = parrafo.split(")")[0].replace("(id=","")
+        self.identificador = parrafo.split(")")[0].replace("(id= p","")
 
         # Crear la ventana de etiquetado de párrafos
         self.tagging_window = tk.Toplevel(self.root)
@@ -221,66 +227,66 @@ class CEMTaggerApp:
         # Atributos Narrativo
 
         # Boton "Introducción". Al pulsarlo agrega introduccion al cuadro de texto
-        self.btn_introduccion = tk.Button(self.tagging_window, text="Introducción", command= lambda: self.text_atributos.insert(tk.END, "Introducción, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_introduccion = tk.Button(self.tagging_window, text="Introducción - (N_Intro)", command= lambda: self.text_atributos.insert(tk.END, "N_Intro, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_introduccion.grid(row=2, column=0, padx=10, pady=0, sticky="ew")
 
         #Boton "Desarrollo". Al pulsarlo agrega desarrollo al cuadro de texto
-        self.btn_desarrollo = tk.Button(self.tagging_window, text="Desarrollo", command= lambda: self.text_atributos.insert(tk.END, "Desarrollo, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_desarrollo = tk.Button(self.tagging_window, text="Desarrollo (N_Dllo)", command= lambda: self.text_atributos.insert(tk.END, "N_Dllo, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_desarrollo.grid(row=3, column=0, padx=10, pady=0, sticky="ew")
 
         # Boton "Climax". Al pulsarlo agrega climax al cuadro de texto
-        self.btn_climax = tk.Button(self.tagging_window, text="Climax", command= lambda: self.text_atributos.insert(tk.END, "Climax, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_climax = tk.Button(self.tagging_window, text="Climax - (N_Clim)", command= lambda: self.text_atributos.insert(tk.END, "N_Clim, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_climax.grid(row=4, column=0, padx=10, pady=0, sticky="ew")
 
         # Boton "Desenlace". Al pulsarlo agrega desenlace al cuadro de texto
-        self.btn_desenlace = tk.Button(self.tagging_window, text="Desenlace", command= lambda: self.text_atributos.insert(tk.END, "Desenlace, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_desenlace = tk.Button(self.tagging_window, text="Desenlace - (N_Des)", command= lambda: self.text_atributos.insert(tk.END, "N_Des, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_desenlace.grid(row=5, column=0, padx=10, pady=0, sticky="ew")
 
         # Boton "Título". Al pulsarlo agrega título al cuadro de texto
-        self.btn_titulo = tk.Button(self.tagging_window, text="Título", command= lambda: self.text_atributos.insert(tk.END, "Título, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_titulo = tk.Button(self.tagging_window, text="Título - (N_Tit)", command= lambda: self.text_atributos.insert(tk.END, "N_Tit, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_titulo.grid(row=6, column=0, padx=10, pady=0, sticky="ew")
 
         # Boton "Subtítulo". Al pulsarlo agrega subtítulo al cuadro de texto
-        self.btn_subtitulo = tk.Button(self.tagging_window, text="Subtítulo", command= lambda: self.text_atributos.insert(tk.END, "Subtítulo, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_subtitulo = tk.Button(self.tagging_window, text="Subtítulo - (N_Subt)", command= lambda: self.text_atributos.insert(tk.END, "N_Subt, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_subtitulo.grid(row=7, column=0, padx=10, pady=0, sticky="ew")
 
         # Boton "Datos Autor". Al pulsarlo agrega datos_autor al cuadro de texto
-        self.btn_datos_autor = tk.Button(self.tagging_window, text="Datos Autor", command= lambda: self.text_atributos.insert(tk.END, "Datos Autor, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_datos_autor = tk.Button(self.tagging_window, text="Datos Autor - (N_DA)", command= lambda: self.text_atributos.insert(tk.END, "N_DA, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_datos_autor.grid(row=8, column=0, padx=10, pady=0, sticky="ew")
 
 
         # Atributos Argumentativo
 
         #Boton "Introduccion o situacion inicial". Al pulsarlo agrega introduccion al cuadro de texto
-        self.btn_introduccion_arg = tk.Button(self.tagging_window, text="Introducción o situación inicial", command= lambda: self.text_atributos.insert(tk.END, "Introducción, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_introduccion_arg = tk.Button(self.tagging_window, text="Introducción - (A_Intro)", command= lambda: self.text_atributos.insert(tk.END, "A_Intro, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_introduccion_arg.grid(row=2, column=1, padx=10, pady=0, sticky="ew")
 
         #Boton "Desarrollo o argumentos". Al pulsarlo agrega desarrollo al cuadro de texto
-        self.btn_desarrollo_arg = tk.Button(self.tagging_window, text="Desarrollo o argumentos", command= lambda: self.text_atributos.insert(tk.END, "Desarrollo, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_desarrollo_arg = tk.Button(self.tagging_window, text="Desarrollo - (A_Dllo)", command= lambda: self.text_atributos.insert(tk.END, "A_Dllo, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_desarrollo_arg.grid(row=3, column=1, padx=10, pady=0, sticky="ew")
 
         # Boton "Conclusión". Al pulsarlo agrega climax al cuadro de texto
-        self.btn_conclusion_arg = tk.Button(self.tagging_window, text="Conclusión", command= lambda: self.text_atributos.insert(tk.END, "Conclusión, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_conclusion_arg = tk.Button(self.tagging_window, text="Conclusión - (A_Con)", command= lambda: self.text_atributos.insert(tk.END, "A_Con, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_conclusion_arg.grid(row=4, column=1, padx=10, pady=0, sticky="ew")
 
         # Boton "Datos bibliograficos". Al pulsarlo agrega datos_bibliograficos al cuadro de texto
-        self.btn_datos_bibliograficos = tk.Button(self.tagging_window, text="Datos bibliográficos", command= lambda: self.text_atributos.insert(tk.END, "Datos bibliográficos, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_datos_bibliograficos = tk.Button(self.tagging_window, text="Datos bibliográficos - (A_DB)", command= lambda: self.text_atributos.insert(tk.END, "A_DB, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_datos_bibliograficos.grid(row=5, column=1, padx=10, pady=0, sticky="ew")
 
         # Boton "Titulo". Al pulsarlo agrega titulo al cuadro de texto
-        self.btn_titulo_arg = tk.Button(self.tagging_window, text="Título", command= lambda: self.text_atributos.insert(tk.END, "Título, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_titulo_arg = tk.Button(self.tagging_window, text="Título - (A_Tit)", command= lambda: self.text_atributos.insert(tk.END, "A_Tit, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_titulo_arg.grid(row=6, column=1, padx=10, pady=0, sticky="ew")
 
         # Boton "Subtitulo". Al pulsarlo agrega subtitulo al cuadro de texto
-        self.btn_subtitulo_arg = tk.Button(self.tagging_window, text="Subtítulo", command= lambda: self.text_atributos.insert(tk.END, "Subtítulo, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_subtitulo_arg = tk.Button(self.tagging_window, text="Subtítulo - (A_Subt)", command= lambda: self.text_atributos.insert(tk.END, "A_Subt, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_subtitulo_arg.grid(row=7, column=1, padx=10, pady=0, sticky="ew")
 
         # Boton "Datos autor". Al pulsarlo agrega datos_autor al cuadro de texto
-        self.btn_datos_autor_arg = tk.Button(self.tagging_window, text="Datos Autor", command= lambda: self.text_atributos.insert(tk.END, "Datos Autor, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_datos_autor_arg = tk.Button(self.tagging_window, text="Datos Autor - (A_DA)", command= lambda: self.text_atributos.insert(tk.END, "A_DA, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_datos_autor_arg.grid(row=8, column=1, padx=10, pady=0, sticky="ew")
 
         # Boton "Referencia". Al pulsarlo agrega referencia al cuadro de texto
-        self.btn_referencia_arg = tk.Button(self.tagging_window, text="Referencia", command= lambda: self.text_atributos.insert(tk.END, "Referencia, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_referencia_arg = tk.Button(self.tagging_window, text="Referencia - (A_Ref)", command= lambda: self.text_atributos.insert(tk.END, "A_Ref, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_referencia_arg.grid(row=9, column=1, padx=10, pady=0, sticky="ew")
 
 
@@ -305,6 +311,48 @@ class CEMTaggerApp:
         return 1
     
     def guardar_etiquetas_parrafo(self):
+        # Extraer el texto del cuadro de texto
+        etiquetas = self.text_atributos.get("1.0", tk.END)
+        
+        # Borrar todo antes del salto de linea
+        etiquetas = etiquetas.split("\n\n")[1]
+
+        #Crear lista con las etiquetas
+        etiquetas = etiquetas.split(", ")
+
+        #Eliminar "/n"
+        etiquetas = [x.replace("\n", "") for x in etiquetas]
+
+
+        #Abrir archivo json para agregar las etiquetas
+        name = "pivot.json"
+
+        #Crear archivo json "pivot.json" si no existe
+        if not os.path.exists(name):
+            with open(name, "w") as outfile:
+                json.dump({"parrafos": {}}, outfile, indent=4)
+        
+        #Abrir archivo json para agregar las etiquetas
+        with open(name, "r") as read_file:
+            data = json.load(read_file)
+            data["parrafos"][self.identificador] = etiquetas
+            with open(name, "w") as write_file:
+                json.dump(data, write_file, indent=4)
+        
+        #Agregar el identificador al cuadro de texto
+        self.identificadores.append(self.identificador)
+
+        #Cerrar la ventana de etiquetado de parrafos
+        self.tagging_window.destroy()        
+
+        
+
+        
+
+        
+
+
+
         return 1
     
     def teminar_parrafos(self):
