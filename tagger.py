@@ -209,6 +209,11 @@ class CEMTaggerApp:
         
         # Extraer el identificador del párrafo
         self.identificador = parrafo.split(")")[0].replace("(id= p","")
+        self.identificador = self.identificador.split(")")[0].replace("(","")
+
+
+
+
 
         # Crear la ventana de etiquetado de párrafos
         self.tagging_window = tk.Toplevel(self.root)
@@ -320,9 +325,7 @@ class CEMTaggerApp:
         #Crear lista con las etiquetas
         etiquetas = etiquetas.split(", ")
 
-        #Eliminar "/n"
-        etiquetas = [x.replace("\n", "") for x in etiquetas]
-
+        etiquetas = [x for x in etiquetas if x != "\n"]
 
         #Abrir archivo json para agregar las etiquetas
         name = "pivot.json"
@@ -357,6 +360,55 @@ class CEMTaggerApp:
     
     def teminar_parrafos(self):
         self.tipo_texto = simpledialog.askstring("Tipo de Texto", "Ingrese el tipo de texto (Religioso o Politico): ")
+
+        #Convertir "paragraphs.xml" a json
+        self.convert_xml_to_json()
+
+
+        #Agregar "pivot.json" al final de "converter_xml.json"
+        name = "converter_xml.json"
+        etiquetado = "pivot.json"
+
+        #pegar etiquetado al final de name
+        with open(name, "r") as read_file:
+            data = json.load(read_file)
+            with open(etiquetado, "r") as read_file:
+                data_etiquetado = json.load(read_file)
+                data["parrafos"] = data_etiquetado["parrafos"]
+                with open(name, "w") as write_file:
+                    json.dump(data, write_file, indent=4)
+        
+        #Agregar el tipo de texto en la document/metadata del json
+        with open(name, "r") as read_file:
+            data = json.load(read_file)
+            data["document"]["metadata"]["tipo_discurso"] = self.tipo_texto
+            with open(name, "w") as write_file:
+                json.dump(data, write_file, indent=4)
+   
+
+        #Guardar el json en un archivo con el nombre del archivo xml original sin la extensión y con "_par.json"
+        name = self.selected_file_path.split(".")[0] + "_par.json"
+        with open(name, "w") as write_file:
+            json.dump(data, write_file, indent=4)
+
+
+        #Eliminar "pivot.json"
+        os.remove("pivot.json")
+
+        #Eliminar "paragraphs.xml"
+        os.remove("paragraphs.xml")
+
+        
+
+        #avisar que se ha terminado de etiquetar los parrafos
+        messagebox.showinfo("Terminado", "Se ha terminado de etiquetar los parrafos")
+
+        #Cerrar la ventana de etiquetado de parrafos
+        self.tagging_window_paragraphs.destroy()
+
+
+
+
 
         return 1
     
