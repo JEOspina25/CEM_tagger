@@ -11,9 +11,6 @@ class CEMTaggerApp:
         self.root = root
         self.root.title("CEM Tagger")
 
-        # Maximizar la ventana al inicio
-        # self.root.attributes('-fullscreen', True)
-
         
 
         # Crear una etiqueta de bienvenida con el texto adicional
@@ -71,7 +68,11 @@ class CEMTaggerApp:
         self.convert_button = tk.Button(button_frame, text="Convertir XML a JSON", command=self.convert_xml_to_json, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b082", fg="white")
         self.convert_button.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
-                    # Crear el botón para etiquetar oraciones
+        # Crear el botón para etiquetar el tipo de discurso
+        self.tag_sentences_button = tk.Button(button_frame, text="Etiquetar Discurso", command=self.etiquetar_discurso, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.tag_sentences_button.grid(row=0, column=1, columnspan=2, padx=10, pady=10, sticky="ew")
+        
+        # Crear el botón para etiquetar parrafos
         self.tag_sentences_button = tk.Button(button_frame, text="Etiquetar Parrafos", command=self.tag_paragraphs, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
         self.tag_sentences_button.grid(row=0, column=1, columnspan=2, padx=10, pady=10, sticky="ew")
     
@@ -160,7 +161,6 @@ class CEMTaggerApp:
 
         # Extraer los párrafos
         paragraphs = self.extraer_parrafos('paragraphs.xml')
-        print(paragraphs)
 
         # Crear un canvas para contener los botones
         canvas = tk.Canvas(button_frame)
@@ -333,12 +333,12 @@ class CEMTaggerApp:
         #Crear archivo json "pivot.json" si no existe
         if not os.path.exists(name):
             with open(name, "w") as outfile:
-                json.dump({"parrafos": {}}, outfile, indent=4)
+                json.dump({"Super_Estructura": {}}, outfile, indent=4)
         
         #Abrir archivo json para agregar las etiquetas
         with open(name, "r") as read_file:
             data = json.load(read_file)
-            data["parrafos"][self.identificador] = etiquetas
+            data["Super_Estructura"][self.identificador] = etiquetas
             with open(name, "w") as write_file:
                 json.dump(data, write_file, indent=4)
         
@@ -359,10 +359,99 @@ class CEMTaggerApp:
         return 1
     
     def teminar_parrafos(self):
-        self.tipo_texto = simpledialog.askstring("Tipo de Texto", "Ingrese el tipo de texto (Religioso o Politico): ")
+
+        #Cerrar la ventana de etiquetado de parrafos
+        self.tagging_window_paragraphs.destroy()
 
         #Convertir "paragraphs.xml" a json
-        self.convert_xml_to_json()
+        self.convert_xml_to_json("paragraphs.xml")
+
+
+        #Se etiqueta el tipo de discurso
+        self.etiquetar_discurso()
+
+
+
+   
+
+
+
+
+
+        return 1
+    
+    def etiquetar_discurso(self):
+        # Crea una ventana nueva self.tagging_discurso para etiquetar el tipo de discurso
+        self.tagging_discurso = tk.Toplevel(self.root)
+        self.tagging_discurso.title("Etiquetado de Discurso")
+
+        # Pone un título: "Seleccione el tipo de discurso"
+        tk.Label(self.tagging_discurso, text="Seleccione el tipo de discurso", font=("Arial", 14)).pack(pady=10)
+
+        # Crea un frame para organizar los botones en dos columnas
+        button_frame = tk.Frame(self.tagging_discurso)
+        button_frame.pack(pady=10)
+
+        # Se crean los botones con los tipos de discurso y se organizan en dos columnas
+
+        # Primera columna
+        self.btn_politico = tk.Button(button_frame, text="Político - (D_Pol)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Pol, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_politico.grid(row=0, column=0, padx=5, pady=5)
+
+        self.btn_religioso = tk.Button(button_frame, text="Religioso - (D_Rel)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Rel, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_religioso.grid(row=1, column=0, padx=5, pady=5)
+
+        self.btn_didactico = tk.Button(button_frame, text="Didáctico - (D_Did)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Did, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_didactico.grid(row=2, column=0, padx=5, pady=5)
+
+        self.btn_periodistico = tk.Button(button_frame, text="Periodístico - (D_Per)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Per, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_periodistico.grid(row=3, column=0, padx=5, pady=5)
+
+        self.btn_literario = tk.Button(button_frame, text="Literario - (D_Lit)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Lit, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_literario.grid(row=4, column=0, padx=5, pady=5)
+
+        # Segunda columna
+        self.btn_juridico = tk.Button(button_frame, text="Jurídico - (D_Jur)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Jur, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_juridico.grid(row=0, column=1, padx=5, pady=5)
+
+        self.btn_comercial = tk.Button(button_frame, text="Comercial o Publicitario - (D_CP)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_CP, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_comercial.grid(row=1, column=1, padx=5, pady=5)
+
+        self.btn_social = tk.Button(button_frame, text="Social - (D_Soc)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Soc, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_social.grid(row=2, column=1, padx=5, pady=5)
+
+        self.btn_cientifico = tk.Button(button_frame, text="Científico - (D_Cien)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Cien, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_cientifico.grid(row=3, column=1, padx=5, pady=5)
+
+        self.btn_academico = tk.Button(button_frame, text="Académico - (D_Acad)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Acad, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_academico.grid(row=4, column=1, padx=5, pady=5)
+
+        # Se crea un campo de texto para mostrar los identificadores de los tipos de discursos seleccionados
+        self.text_identificadores_discurso = tk.Text(self.tagging_discurso, height=8, width=50, font=("Arial", 12))
+        self.text_identificadores_discurso.pack(pady=10)
+
+        # Botones de Guardar y Cancelar
+        self.btn_guardar_discurso = tk.Button(self.tagging_discurso, text="Guardar", command=self.guardar_discurso, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_guardar_discurso.pack(pady=5)
+
+        self.btn_cancelar_discurso = tk.Button(self.tagging_discurso, text="Cancelar", command=self.tagging_discurso.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_cancelar_discurso.pack(pady=5)
+
+        return 1
+
+        
+    def guardar_discurso(self): 
+  
+
+        #Se extrae la información del campo de texto como una lista
+        discurso = self.text_identificadores_discurso.get("1.0", tk.END)
+        discurso = discurso.split(", ")
+
+        #Se eliminan los saltos de linea
+        discurso = [x for x in discurso if x != "\n"]
+        self.tipo_discurso = discurso
+
+
 
 
         #Agregar "pivot.json" al final de "converter_xml.json"
@@ -374,16 +463,17 @@ class CEMTaggerApp:
             data = json.load(read_file)
             with open(etiquetado, "r") as read_file:
                 data_etiquetado = json.load(read_file)
-                data["parrafos"] = data_etiquetado["parrafos"]
+                data["Super_Estructura"] = data_etiquetado["Super_Estructura"]
                 with open(name, "w") as write_file:
                     json.dump(data, write_file, indent=4)
         
-        #Agregar el tipo de texto en la document/metadata del json
-        with open(name, "r") as read_file:
-            data = json.load(read_file)
-            data["document"]["metadata"]["tipo_discurso"] = self.tipo_texto
-            with open(name, "w") as write_file:
-                json.dump(data, write_file, indent=4)
+        if self.tipo_discurso != 0:
+            #Agregar el tipo de texto en la document/metadata del json
+            with open(name, "r") as read_file:
+                data = json.load(read_file)
+                data["document"]["metadata"]["tipo_discurso"] = self.tipo_discurso
+                with open(name, "w") as write_file:
+                    json.dump(data, write_file, indent=4)
    
 
         #Guardar el json en un archivo con el nombre del archivo xml original sin la extensión y con "_par.json"
@@ -398,19 +488,20 @@ class CEMTaggerApp:
         #Eliminar "paragraphs.xml"
         os.remove("paragraphs.xml")
 
+        #Se cierra la ventana de etiquetado de discurso
+        self.tagging_discurso.destroy()
         
 
         #avisar que se ha terminado de etiquetar los parrafos
-        messagebox.showinfo("Terminado", "Se ha terminado de etiquetar los parrafos")
-
-        #Cerrar la ventana de etiquetado de parrafos
-        self.tagging_window_paragraphs.destroy()
+        messagebox.showinfo("Terminado", "Se ha terminado de etiquetar los parrafos y discurso")
 
 
 
 
 
         return 1
+
+        
     
     def extraer_parrafos(self,ruta_archivo):
         # Extraer los párrafos del archivo XML
@@ -572,7 +663,6 @@ class CEMTaggerApp:
     def procesar_oracion(self, oracion):
         # Extraer el identificador de la oración
         self.identificador = oracion.split(")")[0].replace("(id=","")
-        print(self.identificador)
 
         # Crear la ventana de etiquetado de oraciones
         self.tagging_window = tk.Toplevel(self.root)
@@ -826,7 +916,6 @@ class CEMTaggerApp:
     def display_metadata(self):
         try:
             with open(self.selected_file_path, 'r', encoding='utf-8') as xml_file:
-                print(self.selected_file_path)
                 xml_content = xml_file.read()
                 data_dict = xmltodict.parse(xml_content, encoding='utf-8', process_namespaces=True)
                 self.title = data_dict['document']['metadata']['tittle']
@@ -853,6 +942,7 @@ class CEMTaggerApp:
         except Exception as e:
             messagebox.showerror("Error al Extraer Metadata", f"No se pudo extraer la metadata del archivo XML: {str(e)}")
 
+
     def update_metadata_field(self, field, value):
         entry = self.metadata_fields.get(field)
         if entry:
@@ -862,12 +952,10 @@ class CEMTaggerApp:
             entry.config(state=tk.DISABLED)
 
 
-    def convert_xml_to_json(self):
+    def convert_xml_to_json(self,file_path):
         if not hasattr(self, 'selected_file_path') or not self.selected_file_path:
             messagebox.showwarning("Archivo No Seleccionado", "Por favor, seleccione un archivo XML.")
             return
-
-        file_path = self.selected_file_path
 
         # Intentar convertir XML a JSON
         try:
@@ -881,8 +969,10 @@ class CEMTaggerApp:
         # Pedir al usuario que ingrese el nombre del archivo para guardar
         filename = "converter_xml.json"
 
-        # Obtener la ruta de destino para guardar el archivo JSON
-        save_path = filedialog.askdirectory()
+        # Ruta de destino es la carpeta del archivo XML a la misma direccion de self.selected_file_path
+        save_path = os.path.dirname(self.selected_file_path)
+
+
         if not save_path:
             return  # El usuario canceló la selección de la carpeta
 
