@@ -9,6 +9,16 @@ import os
 
 class CEMTaggerApp:
     def __init__(self, root):
+        """Inicializa la aplicación de etiquetado CEM Tagger
+        Organigrama de las ventanas
+        root
+        |-> tagging_window_paragraphs
+        |-> tagging_window
+        |-> tagging_discurso
+
+
+        
+        """
         self.root = root
         self.root.title("CEM Tagger")
 
@@ -64,9 +74,9 @@ class CEMTaggerApp:
         self.select_xml_button = tk.Button(button_frame, text="Seleccionar XML", command=self.select_xml, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b082", fg="white")
         self.select_xml_button.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
 
-        # Crear el botón para convertir XML a JSON
-        self.convert_button = tk.Button(button_frame, text="Convertir XML a JSON", command=self.convert_xml_to_json, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b082", fg="white")
-        self.convert_button.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+        # # Crear el botón para convertir XML a JSON
+        # self.convert_button = tk.Button(button_frame, text="Convertir XML a JSON", command=self.convert_xml_to_json, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b082", fg="white")
+        # self.convert_button.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
         # Crear el botón para etiquetar el tipo de discurso
         self.tag_sentences_button = tk.Button(button_frame, text="Etiquetar Discurso", command=self.etiquetar_discurso, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
@@ -83,9 +93,11 @@ class CEMTaggerApp:
         #Crear botón de ayuda de color azul
         self.btn_ayuda = tk.Button(button_frame, text="Ayuda", command=self.ayuda, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#82bfdc", fg="white")
         self.btn_ayuda.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
+
    
 
     def ayuda(self):
+        """Esta función se encarga de mostrar un mensaje de ayuda"""
         messagebox.showinfo("Ayuda", "Este programa permite etiquetar textos en formato XML. \n\n"
                                      "1. Seleccione un archivo XML. \n"
                                      "2. Etiquete los parrafos \n"
@@ -98,6 +110,7 @@ class CEMTaggerApp:
 
 
     def tag_paragraphs(self):
+        """Esta función se encarga de etiquetar los párrafos del texto"""
 
         if not hasattr(self, 'selected_file_path') or not self.selected_file_path:
             messagebox.showwarning("Archivo No Seleccionado", "Por favor, seleccione un archivo XML antes de etiquetar.")
@@ -107,7 +120,6 @@ class CEMTaggerApp:
         #Si existe el archivo "pivot.json" se elimina
         if os.path.exists("pivot.json"):
             os.remove("pivot.json")
-
         
         # Algoritmo para enumerar los párrafos del xml añadiendo un id
         tree = ET.parse(self.selected_file_path)
@@ -133,7 +145,6 @@ class CEMTaggerApp:
         # Se pone la metadata en la ventana de etiquetado
         metadata_frame = tk.Frame(self.tagging_window_paragraphs)
         metadata_frame.pack(pady=8, padx=21, fill=tk.X)
-    
 
         # Configurar el grid de la columna para que todos los campos tengan el mismo tamaño
         metadata_frame.columnconfigure(1, weight=1)  # Hacer que la segunda columna expanda
@@ -158,7 +169,6 @@ class CEMTaggerApp:
             entry.grid(row=row, column=1, padx=5, pady=1, sticky="ew")
             entry.config(state=tk.DISABLED)
             self.metadata_fields[field] = entry
-
 
         self.display_metadata()
 
@@ -210,7 +220,7 @@ class CEMTaggerApp:
         return 1
     
     def procesar_parrafo(self, parrafo):
-        
+        """Esta función se encarga de procesar el párrafo seleccionado y abrir la ventana de etiquetado de párrafos"""
         # Extraer el identificador del párrafo
         self.identificador = parrafo.split(")")[0].replace("(id= p","")
         self.identificador = self.identificador.split(")")[0].replace("(","")
@@ -262,7 +272,6 @@ class CEMTaggerApp:
         self.btn_datos_autor = tk.Button(self.tagging_window, text="Datos Autor - (N_DA)", command= lambda: self.text_atributos.insert(tk.END, "N_DA, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_datos_autor.grid(row=8, column=0, padx=10, pady=0, sticky="ew")
 
-
         # Atributos Argumentativo
 
         #Boton "Introduccion o situacion inicial". Al pulsarlo agrega introduccion al cuadro de texto
@@ -297,9 +306,6 @@ class CEMTaggerApp:
         self.btn_referencia_arg = tk.Button(self.tagging_window, text="Referencia - (A_Ref)", command= lambda: self.text_atributos.insert(tk.END, "A_Ref, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_referencia_arg.grid(row=9, column=1, padx=10, pady=0, sticky="ew")
 
-
-
-
         #Cuadro de texto para visualizar los atributos asignados al parrafo. Se expande en todo el ancho
         self.text_atributos = tk.Text(self.tagging_window, height=4, width=50, font=("Arial", 12))
         self.text_atributos.grid(row=10, columnspan=2, padx=5, pady=5, sticky="ew")
@@ -315,19 +321,17 @@ class CEMTaggerApp:
         self.btn_cancelar = tk.Button(self.tagging_window, text="Cancelar", command=self.tagging_window.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_cancelar.grid(row=11, column=1, pady=10)
 
-
         return 1
     
+
+
+
     def guardar_etiquetas_parrafo(self):
+        """Esta función se encarga de guardar las etiquetas asignadas al párrafo en el archivo JSON"""
         # Extraer el texto del cuadro de texto
         etiquetas = self.text_atributos.get("1.0", tk.END)
-        
-        # Borrar todo antes del salto de linea
-        etiquetas = etiquetas.split("\n\n")[1]
-
-        #Crear lista con las etiquetas
-        etiquetas = etiquetas.split(", ")
-
+        etiquetas = etiquetas.split("\n\n")[1] # Extraer solo las etiquetas
+        etiquetas = etiquetas.split(", ") # Separar las etiquetas por coma
         etiquetas = [x for x in etiquetas if x != "\n"]
 
         #Abrir archivo json para agregar las etiquetas
@@ -352,8 +356,11 @@ class CEMTaggerApp:
         self.tagging_window.destroy()       
         return 1
     
-    def teminar_parrafos(self):
 
+
+    
+    def teminar_parrafos(self):
+        """Esta función se encarga de guardar el tipo de discurso seleccionado en el archivo JSON"""
         #Cerrar la ventana de etiquetado de parrafos
         self.tagging_window_paragraphs.destroy()
 
@@ -366,8 +373,12 @@ class CEMTaggerApp:
 
         return 1
     
+
+
     
     def etiquetar_discurso(self):
+        """Esta función se encarga de etiquetar el tipo de discurso del texto"""
+
         # Crea una ventana nueva self.tagging_discurso para etiquetar el tipo de discurso
         self.tagging_discurso = tk.Toplevel(self.root)
         self.tagging_discurso.title("Etiquetado de Discurso")
@@ -428,6 +439,7 @@ class CEMTaggerApp:
 
         
     def guardar_discurso(self): 
+        """Esta función se encarga de guardar el tipo de discurso seleccionado en el archivo JSON"""
   
         #Se extrae la información del campo de texto como una lista
         discurso = self.text_identificadores_discurso.get("1.0", tk.END)
@@ -499,7 +511,7 @@ class CEMTaggerApp:
 
 
     def tag_sentences(self):
-
+        """Esta función se encarga de etiquetar las oraciones del texto"""
 
         with open("oraciones.json", "w", encoding="utf-8") as outfile:
           json.dump({"oraciones": {"simples":{},"compuestas" :{}}}, outfile, indent=4)
@@ -596,6 +608,7 @@ class CEMTaggerApp:
 
 
     def terminar(self):
+        """Esta función se encarga de guardar las etiquetas de las oraciones en un archivo json y cerrar la ventana de etiquetado de oraciones"""
 
         #Se abre el archivo json convertido para agregar las etiquetas
         name = "017_B1_INOT_esp_Etiq_par.json"
@@ -623,6 +636,8 @@ class CEMTaggerApp:
 
         #avisar que se ha terminado de etiquetar las oraciones
         messagebox.showinfo("Terminado", "Se ha terminado de etiquetar las oraciones")
+
+        return 1
 
  
 
@@ -729,7 +744,6 @@ class CEMTaggerApp:
         }
 
         niveles = ["A1", "A2", "B1", "B2", "C1"]
-
         indice = niveles.index(self.level)
 
         # Oraciones compuestas
@@ -746,8 +760,6 @@ class CEMTaggerApp:
         simples_predicado = [oracion for i in niveles[:indice + 1] for oracion in tags_simples["segun_la_naturaleza_del_predicado"][i] if oracion]
  
 
-
-
         # Crear los cuadros desplegables para Oraciones Simples
         self.var_simple1 = tk.StringVar(self.tagging_window)
         self.var_simple1.set("Según la actitud del hablante")
@@ -759,7 +771,6 @@ class CEMTaggerApp:
         self.menu_simple2 = tk.OptionMenu(self.tagging_window, self.var_simple2, *simples_predicado)
         self.menu_simple2.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
         
-
 
         # Crear los cuadros desplegables para Oraciones Compuestas
         self.var_compuesta1 = tk.StringVar(self.tagging_window)
@@ -793,8 +804,14 @@ class CEMTaggerApp:
         # Boton cancelar
         self.btn_cancelar = tk.Button(self.tagging_window, text="Cancelar", command=self.tagging_window.destroy)
         self.btn_cancelar.grid(row=7, column=0, columnspan=2, pady=10)
+        
+        return 1
+
+
+
 
     def guardar_datos_oraciones_simples(self):
+        """Esta función guarda los datos de las oraciones simples en el archivo json"""
 
         # Obtener los valores seleccionados en los cuadros desplegables
         simple1 = self.var_simple1.get()
@@ -827,7 +844,8 @@ class CEMTaggerApp:
         
         #cerrar ventana
         self.tagging_window.destroy()
-        
+        return 1
+
 
         
 
@@ -854,9 +872,6 @@ class CEMTaggerApp:
             if compuesta4 != "Distributivas":
                 data["oraciones"]["compuestas"][id] = {"Dist": compuesta4}
         
-
-                
-    
             with open("oraciones.json", "w") as write_file:
                 json.dump(data, write_file, indent=4)
 
@@ -953,10 +968,6 @@ class CEMTaggerApp:
         except Exception as e:
             messagebox.showerror("Error al Guardar", f"No se pudo guardar el archivo JSON: {str(e)}")
             return
-
-
-
-
 
 if __name__ == "__main__":
     root = tk.Tk()
