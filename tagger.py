@@ -43,7 +43,7 @@ class CEMTaggerApp:
         # Crear campos para mostrar metadata
         self.metadata_fields = {}
         metadata_labels = {
-            "Título": "tittle",
+            "Título": "title",
             "ID del Documento": "number",
             "Nivel": "level",
             "Género Textual": "textual_genre",
@@ -94,6 +94,98 @@ class CEMTaggerApp:
         self.btn_ayuda = tk.Button(button_frame, text="Ayuda", command=self.ayuda, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#82bfdc", fg="white")
         self.btn_ayuda.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
 
+
+    def select_xml(self):
+        """Esta función se encarga de abrir un cuadro de diálogo para seleccionar un archivo XML y mostrar su metadata"""
+        # Abrir el cuadro de diálogo para seleccionar un archivo XML
+        file_path = filedialog.askopenfilename(filetypes=[("XML files", "*.xml")])
+        if not file_path:
+            return  # El usuario canceló la selección
+        # Guardar la ruta del archivo seleccionado para su uso posterior
+        self.selected_file_path = file_path
+
+        self.display_metadata()
+
+    def display_metadata(self):
+        """Esta función se encarga de extraer la metadata del archivo XML y mostrarla en los campos correspondientes"""
+        try:
+            with open(self.selected_file_path, 'r', encoding='utf-8') as xml_file:
+                xml_content = xml_file.read()
+                data_dict = xmltodict.parse(xml_content, encoding='utf-8', process_namespaces=True)
+                self.title = data_dict['document']['metadata']['title']
+                self.level = data_dict['document']['metadata']['level']
+                print(self.title)
+                # Obtener el tipo y subtipo del género textual
+                text_type = str(data_dict.get('document', {}).get('metadata', {}).get('textual_genre', {}).get('@type', 'N/A') + ', ' + data_dict.get('document', {}).get('metadata', {}).get('textual_genre', {}).get('@subtype', 'N/A'))
+                # Actualizar campos con valores del XML, o 'N/A' si no están presentes
+                self.update_metadata_field("title", data_dict['document']['metadata']['title'])  
+                self.update_metadata_field("number", data_dict['document']['metadata']['number']["@id_doc"])
+                self.update_metadata_field("level", data_dict['document']['metadata']['level'])
+                self.update_metadata_field("textual_genre", text_type)
+                self.update_metadata_field("Subtipo", data_dict['document']['metadata']['textual_genre']['@subtype'])
+
+                self.update_metadata_field("country", data_dict['document']['metadata']['country']['@name'])
+                self.update_metadata_field("responsable", data_dict['document']['metadata']['responsable'])
+            
+                data = {
+                   "Noticia": "Titular, entrada (resumen breve de la noticia), cuerpo de la noticia (detalles adicionales organizados de lo más importante a lo menos importante), y conclusión o cierre.",
+                    "Notas de enciclopedia": "Título del artículo, definición o descripción inicial, desarrollo del tema (incluye secciones y subsecciones), ejemplos y referencias bibliográficas.",
+                    "mini cuento": "Introducción (planteamiento de la situación), desarrollo (acción y conflicto), clímax (punto culminante de la historia), y desenlace (resolución del conflicto).",
+                    "Columna de opinión": "Título, introducción (presentación del tema y tesis), desarrollo (argumentación y exposición de ideas), y conclusión (resumen y cierre).",
+                    "reseña": "Título, datos bibliográficos (autor, título de la obra, etc.), resumen de la obra, análisis crítico (opinión y valoración), y conclusión.",
+                    "Relato": "Introducción (contextualización del evento), desarrollo (narración de hechos diarios), y desenlace (conclusión o reflexión final).",
+                    "Teatro":"Actos y escenas, acotaciones (indicaciones sobre el escenario, acciones y gestos), diálogos de los personajes, y en algunos casos, prólogo y epílogo.",
+                    "mito": "Introducción (contexto y personajes), desarrollo (narración de hechos y eventos sobrenaturales), clímax, y desenlace (consecuencias de los eventos).",
+                    "Biografía": "Introducción (datos generales del personaje), desarrollo (narración de eventos importantes en la vida del personaje), y conclusión (logros y legado).",
+                    "editorial": "Título, introducción (presentación del tema), desarrollo (exposición de argumentos y puntos de vista), y conclusión (resumen y cierre).",
+                    "cuento": "Introducción (planteamiento de la situación), desarrollo (acción y conflicto), clímax (punto culminante de la historia), y desenlace (resolución del conflicto)."
+                    }
+                subtipo = data_dict['document']['metadata']['textual_genre']['@subtype']
+                self.update_metadata_field("superestructura", data[subtipo])
+        except Exception as e:
+            messagebox.showerror("Error al Extraer Metadata", f"No se pudo extraer la metadata del archivo XML: {str(e)}")
+
+
+    def update_metadata_field(self, field, value):
+        entry = self.metadata_fields.get(field)
+        if entry:
+            entry.config(state=tk.NORMAL)
+            entry.delete(0, tk.END)
+            entry.insert(0, value)
+            entry.config(state=tk.DISABLED)
+
+
+    def convert_xml_to_json(self,file_path):
+        if not hasattr(self, 'selected_file_path') or not self.selected_file_path:
+            messagebox.showwarning("Archivo No Seleccionado", "Por favor, seleccione un archivo XML.")
+            return
+
+        # Intentar convertir XML a JSON
+        try:
+            with open(file_path, 'r', encoding='utf-8') as xml_file:
+                xml_content = xml_file.read()
+                json_data = xmltodict.parse(xml_content, encoding='utf-8', process_namespaces=True)
+        except Exception as e:
+            messagebox.showerror("Error de Conversión", f"No se pudo convertir el archivo XML a JSON: {str(e)}")
+            return
+
+        # Pedir al usuario que ingrese el nombre del archivo para guardar
+        filename = "converter_xml.json"
+
+        # Ruta de destino es la carpeta del archivo XML a la misma direccion de self.selected_file_path
+        save_path = os.path.dirname(self.selected_file_path)
+        if not save_path:
+            return  # El usuario canceló la selección de la carpeta
+
+        # Combinar la ruta y el nombre del archivo
+        full_path = os.path.join(save_path, filename)
+
+        try:
+            with open(full_path, 'w', encoding='utf-8') as json_file:
+                json.dump(json_data, json_file, ensure_ascii=False, indent=4)
+        except Exception as e:
+            messagebox.showerror("Error al Guardar", f"No se pudo guardar el archivo JSON: {str(e)}")
+            return
    
 
     def ayuda(self):
@@ -152,7 +244,7 @@ class CEMTaggerApp:
         # Crear campos para mostrar metadata
         self.metadata_fields = {}
         metadata_labels = {
-            "Título": "tittle",
+            "Título": "title",
             "ID del Documento": "number",
             "Nivel": "level",
             "Género Textual": "textual_genre",
@@ -205,7 +297,7 @@ class CEMTaggerApp:
         self.identificadores = []
 
         #Agregar un campo de texto para mostrar los identificadores de los parrafos etiquetados
-        self.text_identificadores = tk.Text(main_frame, height=8, width=50, font=("Arial", 12))
+        self.text_identificadores = tk.Text(main_frame, height=5, width=50, font=("Arial", 12))
         self.text_identificadores.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
 
         #boton terminar
@@ -225,8 +317,7 @@ class CEMTaggerApp:
         self.identificador = parrafo.split(")")[0].replace("(id= p","")
         self.identificador = self.identificador.split(")")[0].replace("(","")
 
-        #Añadir el identificador al cuadro de texto
-        self.text_identificadores.insert(tk.END, self.identificador + ", ")
+
 
         # Crear la ventana de etiquetado de párrafos
         self.tagging_window = tk.Toplevel(self.root)
@@ -245,69 +336,69 @@ class CEMTaggerApp:
         # Atributos Narrativo
 
         # Boton "Introducción". Al pulsarlo agrega introduccion al cuadro de texto
-        self.btn_introduccion = tk.Button(self.tagging_window, text="Introducción - (N_Intro)", command= lambda: self.text_atributos.insert(tk.END, "N_Intro, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_introduccion = tk.Button(self.tagging_window, text="Introducción - (N_Intro)", command= lambda: self.text_atributos.insert(tk.END, "N_Intro, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#2271b3", fg="white")
         self.btn_introduccion.grid(row=2, column=0, padx=10, pady=0, sticky="ew")
 
         #Boton "Desarrollo". Al pulsarlo agrega desarrollo al cuadro de texto
-        self.btn_desarrollo = tk.Button(self.tagging_window, text="Desarrollo (N_Dllo)", command= lambda: self.text_atributos.insert(tk.END, "N_Dllo, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_desarrollo = tk.Button(self.tagging_window, text="Desarrollo (N_Dllo)", command= lambda: self.text_atributos.insert(tk.END, "N_Dllo, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#2271b3", fg="white")
         self.btn_desarrollo.grid(row=3, column=0, padx=10, pady=0, sticky="ew")
 
         # Boton "Climax". Al pulsarlo agrega climax al cuadro de texto
-        self.btn_climax = tk.Button(self.tagging_window, text="Climax - (N_Clim)", command= lambda: self.text_atributos.insert(tk.END, "N_Clim, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_climax = tk.Button(self.tagging_window, text="Climax - (N_Clim)", command= lambda: self.text_atributos.insert(tk.END, "N_Clim, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#2271b3", fg="white")
         self.btn_climax.grid(row=4, column=0, padx=10, pady=0, sticky="ew")
 
         # Boton "Desenlace". Al pulsarlo agrega desenlace al cuadro de texto
-        self.btn_desenlace = tk.Button(self.tagging_window, text="Desenlace - (N_Des)", command= lambda: self.text_atributos.insert(tk.END, "N_Des, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_desenlace = tk.Button(self.tagging_window, text="Desenlace - (N_Des)", command= lambda: self.text_atributos.insert(tk.END, "N_Des, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#2271b3", fg="white")
         self.btn_desenlace.grid(row=5, column=0, padx=10, pady=0, sticky="ew")
 
         # Boton "Título". Al pulsarlo agrega título al cuadro de texto
-        self.btn_titulo = tk.Button(self.tagging_window, text="Título - (N_Tit)", command= lambda: self.text_atributos.insert(tk.END, "N_Tit, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_titulo = tk.Button(self.tagging_window, text="Título - (N_Tit)", command= lambda: self.text_atributos.insert(tk.END, "N_Tit, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#2271b3", fg="white")
         self.btn_titulo.grid(row=6, column=0, padx=10, pady=0, sticky="ew")
 
         # Boton "Subtítulo". Al pulsarlo agrega subtítulo al cuadro de texto
-        self.btn_subtitulo = tk.Button(self.tagging_window, text="Subtítulo - (N_Subt)", command= lambda: self.text_atributos.insert(tk.END, "N_Subt, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_subtitulo = tk.Button(self.tagging_window, text="Subtítulo - (N_Subt)", command= lambda: self.text_atributos.insert(tk.END, "N_Subt, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#2271b3", fg="white")
         self.btn_subtitulo.grid(row=7, column=0, padx=10, pady=0, sticky="ew")
 
         # Boton "Datos Autor". Al pulsarlo agrega datos_autor al cuadro de texto
-        self.btn_datos_autor = tk.Button(self.tagging_window, text="Datos Autor - (N_DA)", command= lambda: self.text_atributos.insert(tk.END, "N_DA, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_datos_autor = tk.Button(self.tagging_window, text="Datos Autor - (N_DA)", command= lambda: self.text_atributos.insert(tk.END, "N_DA, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#2271b3", fg="white")
         self.btn_datos_autor.grid(row=8, column=0, padx=10, pady=0, sticky="ew")
 
         # Atributos Argumentativo
 
         #Boton "Introduccion o situacion inicial". Al pulsarlo agrega introduccion al cuadro de texto
-        self.btn_introduccion_arg = tk.Button(self.tagging_window, text="Introducción - (A_Intro)", command= lambda: self.text_atributos.insert(tk.END, "A_Intro, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_introduccion_arg = tk.Button(self.tagging_window, text="Introducción - (A_Intro)", command= lambda: self.text_atributos.insert(tk.END, "A_Intro, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#6aa9d6", fg="white")
         self.btn_introduccion_arg.grid(row=2, column=1, padx=10, pady=0, sticky="ew")
 
         #Boton "Desarrollo o argumentos". Al pulsarlo agrega desarrollo al cuadro de texto
-        self.btn_desarrollo_arg = tk.Button(self.tagging_window, text="Desarrollo - (A_Dllo)", command= lambda: self.text_atributos.insert(tk.END, "A_Dllo, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_desarrollo_arg = tk.Button(self.tagging_window, text="Desarrollo - (A_Dllo)", command= lambda: self.text_atributos.insert(tk.END, "A_Dllo, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#6aa9d6", fg="white")
         self.btn_desarrollo_arg.grid(row=3, column=1, padx=10, pady=0, sticky="ew")
 
         # Boton "Conclusión". Al pulsarlo agrega climax al cuadro de texto
-        self.btn_conclusion_arg = tk.Button(self.tagging_window, text="Conclusión - (A_Con)", command= lambda: self.text_atributos.insert(tk.END, "A_Con, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_conclusion_arg = tk.Button(self.tagging_window, text="Conclusión - (A_Con)", command= lambda: self.text_atributos.insert(tk.END, "A_Con, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#6aa9d6", fg="white")
         self.btn_conclusion_arg.grid(row=4, column=1, padx=10, pady=0, sticky="ew")
 
         # Boton "Datos bibliograficos". Al pulsarlo agrega datos_bibliograficos al cuadro de texto
-        self.btn_datos_bibliograficos = tk.Button(self.tagging_window, text="Datos bibliográficos - (A_DB)", command= lambda: self.text_atributos.insert(tk.END, "A_DB, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_datos_bibliograficos = tk.Button(self.tagging_window, text="Datos bibliográficos - (A_DB)", command= lambda: self.text_atributos.insert(tk.END, "A_DB, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#6aa9d6", fg="white")
         self.btn_datos_bibliograficos.grid(row=5, column=1, padx=10, pady=0, sticky="ew")
 
         # Boton "Titulo". Al pulsarlo agrega titulo al cuadro de texto
-        self.btn_titulo_arg = tk.Button(self.tagging_window, text="Título - (A_Tit)", command= lambda: self.text_atributos.insert(tk.END, "A_Tit, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_titulo_arg = tk.Button(self.tagging_window, text="Título - (A_Tit)", command= lambda: self.text_atributos.insert(tk.END, "A_Tit, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#6aa9d6", fg="white")
         self.btn_titulo_arg.grid(row=6, column=1, padx=10, pady=0, sticky="ew")
 
         # Boton "Subtitulo". Al pulsarlo agrega subtitulo al cuadro de texto
-        self.btn_subtitulo_arg = tk.Button(self.tagging_window, text="Subtítulo - (A_Subt)", command= lambda: self.text_atributos.insert(tk.END, "A_Subt, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_subtitulo_arg = tk.Button(self.tagging_window, text="Subtítulo - (A_Subt)", command= lambda: self.text_atributos.insert(tk.END, "A_Subt, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#6aa9d6", fg="white")
         self.btn_subtitulo_arg.grid(row=7, column=1, padx=10, pady=0, sticky="ew")
 
         # Boton "Datos autor". Al pulsarlo agrega datos_autor al cuadro de texto
-        self.btn_datos_autor_arg = tk.Button(self.tagging_window, text="Datos Autor - (A_DA)", command= lambda: self.text_atributos.insert(tk.END, "A_DA, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_datos_autor_arg = tk.Button(self.tagging_window, text="Datos Autor - (A_DA)", command= lambda: self.text_atributos.insert(tk.END, "A_DA, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#6aa9d6", fg="white")
         self.btn_datos_autor_arg.grid(row=8, column=1, padx=10, pady=0, sticky="ew")
 
         # Boton "Referencia". Al pulsarlo agrega referencia al cuadro de texto
-        self.btn_referencia_arg = tk.Button(self.tagging_window, text="Referencia - (A_Ref)", command= lambda: self.text_atributos.insert(tk.END, "A_Ref, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_referencia_arg = tk.Button(self.tagging_window, text="Referencia - (A_Ref)", command= lambda: self.text_atributos.insert(tk.END, "A_Ref, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#6aa9d6", fg="white")
         self.btn_referencia_arg.grid(row=9, column=1, padx=10, pady=0, sticky="ew")
 
         #Cuadro de texto para visualizar los atributos asignados al parrafo. Se expande en todo el ancho
-        self.text_atributos = tk.Text(self.tagging_window, height=4, width=50, font=("Arial", 12))
+        self.text_atributos = tk.Text(self.tagging_window, height=6, width=50, font=("Arial", 12))
         self.text_atributos.grid(row=10, columnspan=2, padx=5, pady=5, sticky="ew")
         
         #Escribir el parrafo en el cuadro de texto y dejar un espacio en blanco
@@ -352,6 +443,9 @@ class CEMTaggerApp:
         #Agregar el identificador al cuadro de texto
         self.identificadores.append(self.identificador)
 
+                #Añadir el identificador al cuadro de texto
+        self.text_identificadores.insert(tk.END, self.identificador + ", ")
+
         #Cerrar la ventana de etiquetado de parrafos
         self.tagging_window.destroy()       
         return 1
@@ -393,35 +487,35 @@ class CEMTaggerApp:
         # Se crean los botones con los tipos de discurso y se organizan en dos columnas
 
         # Primera columna
-        self.btn_politico = tk.Button(button_frame, text="Político - (D_Pol)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Pol, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_politico = tk.Button(button_frame, text="Político - (D_Pol)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Pol, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#92c5fc", fg="white")
         self.btn_politico.grid(row=0, column=0, padx=5, pady=5)
 
-        self.btn_religioso = tk.Button(button_frame, text="Religioso - (D_Rel)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Rel, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_religioso = tk.Button(button_frame, text="Religioso - (D_Rel)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Rel, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#92c5fc", fg="white")
         self.btn_religioso.grid(row=1, column=0, padx=5, pady=5)
 
-        self.btn_didactico = tk.Button(button_frame, text="Didáctico - (D_Did)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Did, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_didactico = tk.Button(button_frame, text="Didáctico - (D_Did)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Did, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#92c5fc", fg="white")
         self.btn_didactico.grid(row=2, column=0, padx=5, pady=5)
 
-        self.btn_periodistico = tk.Button(button_frame, text="Periodístico - (D_Per)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Per, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_periodistico = tk.Button(button_frame, text="Periodístico - (D_Per)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Per, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#92c5fc", fg="white")
         self.btn_periodistico.grid(row=3, column=0, padx=5, pady=5)
 
-        self.btn_literario = tk.Button(button_frame, text="Literario - (D_Lit)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Lit, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_literario = tk.Button(button_frame, text="Literario - (D_Lit)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Lit, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#92c5fc", fg="white")
         self.btn_literario.grid(row=4, column=0, padx=5, pady=5)
 
         # Segunda columna
-        self.btn_juridico = tk.Button(button_frame, text="Jurídico - (D_Jur)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Jur, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_juridico = tk.Button(button_frame, text="Jurídico - (D_Jur)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Jur, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#92c5fc", fg="white")
         self.btn_juridico.grid(row=0, column=1, padx=5, pady=5)
 
-        self.btn_comercial = tk.Button(button_frame, text="Comercial o Publicitario - (D_CP)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_CP, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_comercial = tk.Button(button_frame, text="Comercial \n o Publicitario - (D_CP)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_CP, "), borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
         self.btn_comercial.grid(row=1, column=1, padx=5, pady=5)
 
-        self.btn_social = tk.Button(button_frame, text="Social - (D_Soc)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Soc, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_social = tk.Button(button_frame, text="Social - (D_Soc)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Soc, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#92c5fc", fg="white")
         self.btn_social.grid(row=2, column=1, padx=5, pady=5)
 
-        self.btn_cientifico = tk.Button(button_frame, text="Científico - (D_Cien)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Cien, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_cientifico = tk.Button(button_frame, text="Científico - (D_Cien)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Cien, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#92c5fc", fg="white")
         self.btn_cientifico.grid(row=3, column=1, padx=5, pady=5)
 
-        self.btn_academico = tk.Button(button_frame, text="Académico - (D_Acad)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Acad, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_academico = tk.Button(button_frame, text="Académico - (D_Acad)", command= lambda: self.text_identificadores_discurso.insert(tk.END, "D_Acad, "), borderwidth=1, relief="raised", width=25, height=1, font=("Arial", 16), bg="#92c5fc", fg="white")
         self.btn_academico.grid(row=4, column=1, padx=5, pady=5)
 
         # Se crea un campo de texto para mostrar los identificadores de los tipos de discursos seleccionados
@@ -513,8 +607,8 @@ class CEMTaggerApp:
     def tag_sentences(self):
         """Esta función se encarga de etiquetar las oraciones del texto"""
 
-        with open("oraciones.json", "w", encoding="utf-8") as outfile:
-          json.dump({"oraciones": {"simples":{},"compuestas" :{}}}, outfile, indent=4)
+        with open("oraciones.json", "w") as outfile:
+            json.dump({"oraciones": {"ind_simple":{},"ind_coordinada" :{},"dep_subordinada":{}, "dep_subordinada":{},"ind_yuxtaposicion":{}}}, outfile, indent=4)
 
         # Crear la ventana de etiquetado de oraciones
         self.tagging_window_sentences = tk.Toplevel(self.root)
@@ -533,7 +627,7 @@ class CEMTaggerApp:
         # Crear campos para mostrar metadata
         self.metadata_fields = {}
         metadata_labels = {
-            "Título": "tittle",
+            "Título": "title",
             "ID del Documento": "number",
             "Nivel": "level",
             "Género Textual": "textual_genre",
@@ -665,309 +759,420 @@ class CEMTaggerApp:
         # Extraer el identificador de la oración
         self.identificador = oracion.split(")")[0].replace("(id=","")
 
+        # Se guarda la oración
+        self.oracion = oracion
+
         # Crear la ventana de etiquetado de oraciones
         self.tagging_window = tk.Toplevel(self.root)
-        self.tagging_window.title("Etiquetado de Oraciones")
+        self.tagging_window.title("Tipo de independencia de las oraciones")
 
-        # Configurar la ventana para adaptarse al contenido
-        self.tagging_window.columnconfigure(0, weight=1)
-        self.tagging_window.columnconfigure(1, weight=1)
-        self.tagging_window.rowconfigure([0, 1, 2 , 3 , 4 , 5,6], weight=1)
+        #Pone un título: "Seleccione el tipo de independencia de las oraciones"
+        tk.Label(self.tagging_window, text="Seleccione el tipo de independencia de las oraciones", font=("Arial", 14)).pack(pady=10)
 
-        # Crear un campo que muestre el string "oración" en la fila 0
-        oracion_label = tk.Label(self.tagging_window, text=oracion, font=("Arial", 8))
-        oracion_label.grid(row=0, column=0, columnspan=2, pady=10)  # Ajustar columnspan para que ocupe ambas columnas
+        # Crear un marco para organizar los botones en tres columnas
+        button_frame = tk.Frame(self.tagging_window)
 
-        # Crear los títulos
-        tk.Label(self.tagging_window, text="Oraciones Simples", font=("Arial", 14)).grid(row=1, column=0, sticky="ew", padx=10, pady=10)
-        tk.Label(self.tagging_window, text="Oraciones Compuestas", font=("Arial", 14)).grid(row=1, column=1, sticky="ew", padx=10, pady=10)
+        #Crear un espacio de texto para poner la oracion
+        self.text_oracion = tk.Text(self.tagging_window, height=7, width=70, font=("Arial", 12))
+        self.text_oracion.pack(pady=10)
 
-        tags_simples = { 
-            "segun_la_actitud_del_hablante": {
-            "A1": ["Enunciativas afirmativas","Enunciativas negativas","Interrogativas directas totales con sentido literal","Interrogativas directas parciales con sentido literal","no aplica"
-            ],
-            "A2": ["Interrogativas disyuntivas","Exclamativas","Exhortativas"
-            ],
-            "B1": [
-                "Dubitativas con indicativo"
-            ],
-            "B2": [
-                "Dubitativas con subjuntivo e indicativo"
-            ],
-            "C1": [
-                "Estructura interrogativa con sujeto antepuesto","Interrogativas precedidas de tópico"
-            ]
-            },
+        #Escribir la oracion en el cuadro de texto
+        self.text_oracion.insert(tk.END, oracion)
 
-            "segun_la_naturaleza_del_predicado": {
-            "A1": ["Impersonales con el verbo 'haber'","Copulativas","Atributivas","Transitivas","Intransitivas","no aplica"
-            ],
-            "A2": ["Reflexivas","Impersonales con el verbo 'haber'","Impersonales con verbos unipersonales y de fenómenos atmosféricos","Impersonales y pasivas reflejas","Desiderativas"
-            ],
-            "B1": ["Recíprocas","Impersonales con verbos unipersonales y de fenómenos atmosféricos","Impersonales y pasivas reflejas"
-            ],
-            "B2": [
-                "Pasivas perifrásticas"]}
-        }
+        # se organizan los botones en tres columnas
+        button_frame.pack(pady=20)
 
-        oraciones_compuestas = {
-            "Copulativas": {
-                "A1": 
-                    ["Con la conjunción 'y'","Negativas con la conjunción 'ni'","no aplica"],
-                "A2": ["Sustitución de 'y' por 'e'"],
-                "B1": [],
-                "B2": ["Negativas con la conjunción 'ni'"],
-                "C1": 
-                    ["Asíndeton","Polisíndeton"]
-            },
-            "Adversativas": {
-                "A1": ["Con la conjunción 'pero'","no aplica"],
-                "A2": [],
-                "B1": ["Sin embargo","Aunque"],
-                "B2": ["Sino","No obstante"],
-                "C1": []
-            },
-            "Disyuntivas": {
-                "A1": ["Con la conjunción 'o'","no aplica"],
-                "A2": ["Sustitución de 'o' por 'u'"],
-                "B1": [],
-                "B2": [],
-                "C1": []
-            },
-            "Distributivas": {
-                "A1": ["Con uno... otro...","no aplica"],
-                "A2": [],
-                "B1": [],
-                "B2": [],
-                "C1": []
-            }
-        }
 
-        niveles = ["A1", "A2", "B1", "B2", "C1"]
-        indice = niveles.index(self.level)
+        # Se crean los botones con los tipos de independencia de las oraciones y se organizan en tres filas
 
-        # Oraciones compuestas
-        compuestas_copulativas   = [oracion for i in niveles[:indice + 1] for oracion in oraciones_compuestas["Copulativas"][i] if oracion]
-        compuestas_adversativas  = [oracion for i in niveles[:indice + 1] for oracion in oraciones_compuestas["Adversativas"][i] if oracion]
-        compuestas_disyuntivas   = [oracion for i in niveles[:indice + 1] for oracion in oraciones_compuestas["Disyuntivas"][i] if oracion]
-        compuestas_distributivas = [oracion for i in niveles[:indice + 1] for oracion in oraciones_compuestas["Distributivas"][i] if oracion]
+        #Boton de independencia simple
+        self.btn_independencia_simple = tk.Button(button_frame, text="Independencia \n Simple - (O_Simp)", command=self.oraciones_independencia_simple, borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_independencia_simple.grid(row=0, column=0, padx=10, pady=5, sticky="ew")
 
-        # Oraciones simples
-        simples_act_habl = tags_simples["segun_la_actitud_del_hablante"][self.level]
 
-        #Tags de oraciones simples
-        simples_act_habl  = [oracion for i in niveles[:indice + 1] for oracion in tags_simples["segun_la_actitud_del_hablante"][i] if oracion]
-        simples_predicado = [oracion for i in niveles[:indice + 1] for oracion in tags_simples["segun_la_naturaleza_del_predicado"][i] if oracion]
- 
+        #Boton de independencia coordinada
+        self.btn_independencia_coordinada = tk.Button(button_frame, text="Independencia \n Coordinada - (O_Coord)", command=self.oraciones_independencia_coordinada, borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_independencia_coordinada.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
 
-        # Crear los cuadros desplegables para Oraciones Simples
-        self.var_simple1 = tk.StringVar(self.tagging_window)
-        self.var_simple1.set("Según la actitud del hablante")
-        self.menu_simple1 = tk.OptionMenu(self.tagging_window, self.var_simple1, *simples_act_habl)
-        self.menu_simple1.grid(row=2, column=0, padx=10, pady=10, sticky="ew")
+        #Boton de independencia por yuxtaposición
+        self.btn_independencia_yuxtaposicion = tk.Button(button_frame, text="Independencia por \n Yuxtaposición - (O_Yuxt)", command=self.oraciones_independencia_yuxtaposicion, borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_independencia_yuxtaposicion.grid(row=2, column=0, padx=10, pady=5, sticky="ew")
 
-        self.var_simple2 = tk.StringVar(self.tagging_window)
-        self.var_simple2.set("Según la naturaleza del predicado")
-        self.menu_simple2 = tk.OptionMenu(self.tagging_window, self.var_simple2, *simples_predicado)
-        self.menu_simple2.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
+        # Boton de Dependencia Subordinada
+        self.btn_dependencia_subordinada = tk.Button(button_frame, text="Dependencia \n Subordinada - (O_Sub)", command=self.oraciones_dependencia_subordinada, borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_dependencia_subordinada.grid(row=3, column=0, padx=10, pady=5, sticky="ew")
+
+        # Boton de cancelar en en color gris
+        self.btn_cancelar = tk.Button(self.tagging_window, text="Cancelar", command=self.tagging_window.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#A9A9A9", fg="white")
+        self.btn_cancelar.pack(pady=5)
+        
         
 
-        # Crear los cuadros desplegables para Oraciones Compuestas
-        self.var_compuesta1 = tk.StringVar(self.tagging_window)
-        self.var_compuesta1.set("Copulativas")
-        self.menu_compuesta1 = tk.OptionMenu(self.tagging_window, self.var_compuesta1, *compuestas_copulativas)
-        self.menu_compuesta1.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
-
-        self.var_compuesta2 = tk.StringVar(self.tagging_window)
-        self.var_compuesta2.set("Adversativas")
-        self.menu_compuesta2 = tk.OptionMenu(self.tagging_window, self.var_compuesta2, *compuestas_adversativas)
-        self.menu_compuesta2.grid(row=3, column=1, padx=10, pady=10, sticky="ew")
-
-        self.var_compuesta3 = tk.StringVar(self.tagging_window)
-        self.var_compuesta3.set("Disyuntivas")
-        self.menu_compuesta3 = tk.OptionMenu(self.tagging_window, self.var_compuesta3, *compuestas_disyuntivas)
-        self.menu_compuesta3.grid(row=4, column=1, padx=10, pady=10, sticky="ew")
-
-        self.var_compuesta4 = tk.StringVar(self.tagging_window)
-        self.var_compuesta4.set("Distributivas")
-        self.menu_compuesta4 = tk.OptionMenu(self.tagging_window, self.var_compuesta4, *compuestas_distributivas)
-        self.menu_compuesta4.grid(row=5, column=1, padx=10, pady=10, sticky="ew")
-
-        # Botón de Guardar Oración simple
-        self.btn_guardar = tk.Button(self.tagging_window, text="Asignar Oracion simple", command=self.guardar_datos_oraciones_simples)
-        self.btn_guardar.grid(row=6, column=0, pady=10)
-
-        #Boton de guardar oracion compuesta
-        self.btn_guardar = tk.Button(self.tagging_window, text="Asignar Oracion compuesta", command=self.guardar_datos_oraciones_compuestas)
-        self.btn_guardar.grid(row=6, column=1, pady=10)
-
-        # Boton cancelar
-        self.btn_cancelar = tk.Button(self.tagging_window, text="Cancelar", command=self.tagging_window.destroy)
-        self.btn_cancelar.grid(row=7, column=0, columnspan=2, pady=10)
         
         return 1
-
-
-
-
-    def guardar_datos_oraciones_simples(self):
-        """Esta función guarda los datos de las oraciones simples en el archivo json"""
-
-        # Obtener los valores seleccionados en los cuadros desplegables
-        simple1 = self.var_simple1.get()
-        simple2 = self.var_simple2.get()
-
-        id = "id_"+str(self.identificador)
-
-        # escribir en el archivo json "oraciones.json"
-        with open("oraciones.json", "r") as read_file:
-            data = json.load(read_file)
-        
-        #Si se modifica uno de los campos se guardan los cambios individuales
-        if simple1 != "Según la actitud del hablante":
-            data["oraciones"]["simples"][id] = {"actitud": simple1}
-
-        if simple2 != "Según la naturaleza del predicado":
-            data["oraciones"]["simples"][id] = {"predicado": simple2}
-
-        #Si se modifican ambos campos se guardan los cambios en ambos campos
-        if simple1 != "Según la actitud del hablante" and simple2 != "Según la naturaleza del predicado":
-            data["oraciones"]["simples"][id] = {"actitud": simple1, "predicado": simple2}
-
-        #Se escribe en el archivo json
-        with open("oraciones.json", "w") as write_file:
-            json.dump(data, write_file, indent=4)
-
-
-        #Actualizar el campo de texto con los identificadores de las oraciones etiquetadas
-        self.text_identificadores.insert(tk.END, id + " simple,")
-        
-        #cerrar ventana
-        self.tagging_window.destroy()
-        return 1
-
-
-        
-
-    def guardar_datos_oraciones_compuestas(self):
-            
-            # Obtener los valores seleccionados en los cuadros desplegables
-            compuesta1 = self.var_compuesta1.get()
-            compuesta2 = self.var_compuesta2.get()
-            compuesta3 = self.var_compuesta3.get()
-            compuesta4 = self.var_compuesta4.get()
-
-            id = "id_"+str(self.identificador)
     
-            # escribir en el archivo json
-            with open("oraciones.json", "r") as read_file:
-                data = json.load(read_file)
+    def oraciones_dependencia_subordinada(self):
+        #cierra la ventana de etiquetado de oraciones
+        self.tagging_window.destroy()
 
-            if compuesta1 != "Copulativas":
-                data["oraciones"]["compuestas"][id] = {"Cop": compuesta1}
-            if compuesta2 != "Adversativas":
-                data["oraciones"]["compuestas"][id] = {"Adv": compuesta2}
-            if compuesta3 != "Disyuntivas":
-                data["oraciones"]["compuestas"][id] = {"Disy": compuesta3}
-            if compuesta4 != "Distributivas":
-                data["oraciones"]["compuestas"][id] = {"Dist": compuesta4}
-        
-            with open("oraciones.json", "w") as write_file:
+        #Crea un vantana para etiquetar oraciones con dependencia subordinada
+        self.tagging_window_subordinada = tk.Toplevel(self.root)
+
+        #Pone un título: "Seleccione el tipo de dependencia subordinada de las oraciones"
+        tk.Label(self.tagging_window_subordinada, text="Seleccione el tipo de dependencia subordinada de las oraciones", font=("Arial", 14)).pack(pady=10)
+
+
+
+        opciones = ["Sustantivas - (O_Sub_Sust)", "Adjetivas o Relativo - (O_Sub_AdjRel)", "Adverbiales - (O_Sub_Adv)"]
+
+        # Crea un menú desplegable con las opciones
+        self.opcion_sub = tk.StringVar(self.tagging_window_subordinada)
+        self.opcion_sub.set("Dependencia Subordinada")
+        self.menu_sub = tk.OptionMenu(self.tagging_window_subordinada, self.opcion_sub, *opciones)
+        self.menu_sub.pack(pady=20)
+
+        #Crear un espacio de texto para poner la oracion
+        self.text_oracion = tk.Text(self.tagging_window_subordinada, height=7, width=70, font=("Arial", 12))
+        self.text_oracion.pack(pady=10)
+
+        #Escribir la oracion en el cuadro de texto
+        self.text_oracion.insert(tk.END, self.oracion + "\n\n")
+
+        # Boton de guardar en color verde
+        self.btn_guardar = tk.Button(self.tagging_window_subordinada, text="Guardar", command=self.guardar_datos_oraciones_subordinada, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_guardar.pack(pady=5)
+
+        # Boton de cancelar en en color gris
+        self.btn_cancelar = tk.Button(self.tagging_window_subordinada, text="Cancelar", command=self.tagging_window_subordinada.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#A9A9A9", fg="white")
+        self.btn_cancelar.pack(pady=5)
+
+
+
+
+        return 1
+
+    
+    def oraciones_independencia_simple(self):
+        #cierra la ventana de etiquetado de oraciones
+        self.tagging_window.destroy()
+
+        #Crea un vantana para etiquetar oraciones con independencia simple
+        self.tagging_window_simple = tk.Toplevel(self.root)
+        self.tagging_window_simple.title("Etiquetado de Oraciones Simples")
+
+        #Configurar la ventana para adaptarse al contenido
+        self.tagging_window_simple.columnconfigure(0, weight=1)
+        self.tagging_window_simple.columnconfigure(1, weight=1)
+        self.tagging_window_simple.columnconfigure(2, weight=1)
+        self.tagging_window_simple.rowconfigure([0, 1,2,3,4], weight=1)
+
+        #Pone un título: "Seleccione el tipo de independencia simple de las oraciones"
+        tk.Label(self.tagging_window_simple, text="Seleccione el tipo de independencia simple de las oraciones", font=("Arial", 14)).grid(row=0, column=0, columnspan=3, padx=10, pady=10)
+
+        #Crear un espacio de texto para poner la oracion
+        self.text_oracion = tk.Text(self.tagging_window_simple, height=7, width=70, font=("Arial", 12))
+        self.text_oracion.grid(row=1, column=0, columnspan=3, padx=10, pady=10)
+
+        #Escribir la oracion en el cuadro de texto
+        self.text_oracion.insert(tk.END, self.oracion + "\n\n")
+
+        # Variables
+        hablante = ["Enunciativas  afirmativas - (OS_AH_EA)","Enunciativas  negativas - (OS_AH_EN)","Interrogativas directas totales con sentido literal - (OS_AH_IDTSL)","Interrogativas directas parciales con sentido literal - (OS_AH_IDPSL)",
+                    "Interrogativas disyuntivas - (OS_AH_ID)","Estructura interrogativa con sujeto antepuesto - (OS_AH_ISA)","Interrogativas precedidas de tópico - (OS_AH_IPT)","Exclamativas - (OS_AH_Exc)","Exhortativas-Imperativas - (OS_AH_Exh)","Dubitativas con indicativo - (OS_AH_DI)"
+                    "Dubitativas con subjuntivo - (OS_AH_DS)"]
+        predicado = ["Impersonales con el verbo 'haber' - (OS_NP_IVH)","Copulativas - (OS_NP_C)","Atributivas - (OS_NP_A)","Transitivas - (OS_NP_T)","Intransitivas - (OS_NP_I)","Reflexivas - (OS_NP_R)","Impersonales con el verbo 'haber' - (OS_NP_IVH)","Pasivas perifrásticas - (OS_NP_PP)"]
+        frase_enunciado = ["Frase - (Frase)","Enunciado - (enun)"]
+
+        # Hablante
+        self.opcion_hablante = tk.StringVar(self.tagging_window_simple)
+        self.opcion_hablante.set("Según la actitud del hablante")
+        self.menu_hablante = tk.OptionMenu(self.tagging_window_simple, self.opcion_hablante, *hablante)
+        self.menu_hablante.grid(row=2, column=0, padx=10, pady=5, sticky="ew")
+
+        # Predicado
+        self.opcion_predicado = tk.StringVar(self.tagging_window_simple)
+        self.opcion_predicado.set("Según la naturaleza del predicado")
+        self.menu_predicado = tk.OptionMenu(self.tagging_window_simple, self.opcion_predicado, *predicado)
+        self.menu_predicado.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
+
+        # Frase o enunciado
+        self.opcion_frase = tk.StringVar(self.tagging_window_simple)
+        self.opcion_frase.set("Frase o Enunciado")
+        self.menu_frase = tk.OptionMenu(self.tagging_window_simple, self.opcion_frase, *frase_enunciado)
+        self.menu_frase.grid(row=2, column=2, padx=10, pady=5, sticky="ew")
+
+        # Boton de guardar en color verde
+        self.btn_guardar = tk.Button(self.tagging_window_simple, text="Guardar", command=self.guardar_datos_oraciones_simple, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_guardar.grid(row=3, column=0, columnspan=3, pady=10)
+
+        # Boton de cancelar en en color gris
+        self.btn_cancelar = tk.Button(self.tagging_window_simple, text="Cancelar", command=self.tagging_window_simple.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#A9A9A9", fg="white")
+        self.btn_cancelar.grid(row=4, column=0, columnspan=3, pady=10)
+
+
+        return 1
+    
+    def guardar_datos_oraciones_simple(self):
+
+        #Abrir archivo json para agregar las etiquetas
+        name = "oraciones.json"
+
+        hablante = self.opcion_hablante.get()
+        predicado = self.opcion_predicado.get()
+        frase = self.opcion_frase.get()
+
+        etiquetas = []
+
+        if hablante != "Según la actitud del hablante":
+            etiquetas.append(hablante.split(" - ")[1].replace("(","").replace(")",""))
+
+        if predicado != "Según la naturaleza del predicado":
+            etiquetas.append(predicado.split(" - ")[1].replace("(","").replace(")",""))
+
+        if frase != "Frase o Enunciado":
+            etiquetas.append(frase.split(" - ")[1].replace("(","").replace(")",""))
+
+        #Abrir archivo json para agregar las etiquetas
+        with open(name, "r") as read_file:
+            data = json.load(read_file)
+            data["oraciones"]["ind_simple"][self.identificador] = etiquetas
+            with open(name, "w") as write_file:
                 json.dump(data, write_file, indent=4)
 
-            #Actualizar el campo de texto con los identificadores de las oraciones etiquetadas
-            self.text_identificadores.insert(tk.END, id + " compuesta, ")
+        #Agregar el identificador de la oracion al campo de texto
+        self.text_identificadores.insert(tk.END, self.identificador + " Sim, ")   
 
-            #cerrar ventana
-            self.tagging_window.destroy()
+        #Cerrar la ventana de etiquetado de oraciones
+        self.tagging_window_simple.destroy()     
 
+        return 1
 
-    def select_xml(self):
-        # Abrir el cuadro de diálogo para seleccionar un archivo XML
-        file_path = filedialog.askopenfilename(filetypes=[("XML files", "*.xml")])
-        if not file_path:
-            return  # El usuario canceló la selección
-
-
-        # Guardar la ruta del archivo seleccionado para su uso posterior
-        self.selected_file_path = file_path
+    
+    def oraciones_independencia_coordinada(self):
+        #cierra la ventana de etiquetado de oraciones
+        self.tagging_window.destroy()
 
 
-        # Extraer y mostrar metadata
-        self.display_metadata()
+        #Crea un vantana para etiquetar oraciones con independencia coordinada
+        self.tagging_window_coordinada = tk.Toplevel(self.root)
+        self.tagging_window_coordinada.title("Etiquetado de Oraciones Coordinadas")
 
-    def display_metadata(self):
-        try:
-            with open(self.selected_file_path, 'r', encoding='utf-8') as xml_file:
-                xml_content = xml_file.read()
-                data_dict = xmltodict.parse(xml_content, encoding='utf-8', process_namespaces=True)
-                self.title = data_dict['document']['metadata']['tittle']
-                self.level = data_dict['document']['metadata']['level']
-                # Obtener el tipo y subtipo del género textual
-                text_type = str(data_dict.get('document', {}).get('metadata', {}).get('textual_genre', {}).get('@type', 'N/A') + ', ' + data_dict.get('document', {}).get('metadata', {}).get('textual_genre', {}).get('@subtype', 'N/A'))
-                # Actualizar campos con valores del XML, o 'N/A' si no están presentes
-                self.update_metadata_field("tittle", data_dict['document']['metadata']['tittle'])  # Cambio de 'tittle' a 'title'
-                self.update_metadata_field("number", data_dict['document']['metadata']['number']["@id_doc"])
-                self.update_metadata_field("level", data_dict['document']['metadata']['level'])
-                self.update_metadata_field("textual_genre", text_type)
-                self.update_metadata_field("Subtipo", data_dict['document']['metadata']['textual_genre']['@subtype'])
+        #Configurar la ventana para adaptarse al contenido
+        self.tagging_window_coordinada.columnconfigure(0, weight=1)
+        self.tagging_window_coordinada.columnconfigure(1, weight=1)
+        self.tagging_window_coordinada.rowconfigure([0, 1,2,3,4,5], weight=1)
 
-                self.update_metadata_field("country", data_dict['document']['metadata']['country']['@name'])
-                self.update_metadata_field("responsable", data_dict['document']['metadata']['responsable'])
+        #Pone un título: "Seleccione el tipo de independencia coordinada de las oraciones"        
+        #Asigna el título a la primera fila
+        tk.Label(self.tagging_window_coordinada, text="Seleccione el tipo de independencia coordinada de las oraciones", font=("Arial", 14)).grid(row=0, column=0, columnspan=2, padx=10, pady=10)
+
+
+
+        #Crear un espacio de texto para poner la oracion
+        self.text_oracion = tk.Text(self.tagging_window_coordinada, height=7, width=70, font=("Arial", 12))
+        self.text_oracion.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
+
+        #Escribir la oracion en el cuadro de texto
+        self.text_oracion.insert(tk.END, self.oracion + "\n\n")
+
+        # Variables
+        copulativas = ["Con la conjunción 'y' - (OC_CCy)","Negativas con la conjunción 'ni - (OC_Ncni)' ","Sustitución de 'y' por 'e' - (C_Sye)","Asíndeton - (C_A)","Polisíndeton - (C_P)"]
+        adversativas = ["Con la conjunción 'pero' - (A_Cp)", "Con 'sin embargo' - (A_SE)" ,"Con 'aunque' - (A_A)", "Con 'sino - (A_S)", "Con No obstante - (A_NO)"]
+        disyuntivas = ["Con la conjuncion 'o' - (D_Co)","Sustitución de 'o' por 'u' - (D_Sou)"]
+        distributivas = ["Con uno... otro - (D_CUO)"]
+
+
+        # Copulativas
+        self.opcion_copulativas = tk.StringVar(self.tagging_window_coordinada)
+        self.opcion_copulativas.set("Copulativas")
+        self.menu_copulativas = tk.OptionMenu(self.tagging_window_coordinada, self.opcion_copulativas, *copulativas)
+        self.menu_copulativas.grid(row=2, column=0, padx=10, pady=5, sticky="ew")
+
+        # Adversativas
+        self.opcion_adversativas = tk.StringVar(self.tagging_window_coordinada)
+        self.opcion_adversativas.set("Adversativas")
+        self.menu_adversativas = tk.OptionMenu(self.tagging_window_coordinada, self.opcion_adversativas, *adversativas)
+        self.menu_adversativas.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
+
+        # Disyuntivas
+        self.opcion_disyuntivas = tk.StringVar(self.tagging_window_coordinada)
+        self.opcion_disyuntivas.set("Disyuntivas")
+        self.menu_disyuntivas = tk.OptionMenu(self.tagging_window_coordinada, self.opcion_disyuntivas, *disyuntivas)
+        self.menu_disyuntivas.grid(row=3, column=0, padx=10, pady=5, sticky="ew")
+
+        # Distributivas
+        self.opcion_distributivas = tk.StringVar(self.tagging_window_coordinada)
+        self.opcion_distributivas.set("Distributivas")
+        self.menu_distributivas = tk.OptionMenu(self.tagging_window_coordinada, self.opcion_distributivas, *distributivas)
+        self.menu_distributivas.grid(row=3, column=1, padx=10, pady=5, sticky="ew")
+
+        # Boton de guardar en color verde
+        self.btn_guardar = tk.Button(self.tagging_window_coordinada, text="Guardar", command=self.guardar_datos_oraciones_coordinada, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_guardar.grid(row=4, column=0, columnspan=2, pady=10)
+
+        # Boton de cancelar en en color gris
+        self.btn_cancelar = tk.Button(self.tagging_window_coordinada, text="Cancelar", command=self.tagging_window_coordinada.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#A9A9A9", fg="white")
+        self.btn_cancelar.grid(row=5, column=0, columnspan=2, pady=10)
+
+
+        return 1
+    
+    def guardar_datos_oraciones_coordinada(self):
+
+        #Abrir archivo json para agregar las etiquetas
+        name = "oraciones.json"
+
+        #Etiquetas adversativas
+        adversativas = self.opcion_adversativas.get()
+
+        #Etiquetas copulativas
+        copulativas = self.opcion_copulativas.get()
+
+        #Etiquetas disyuntivas
+        disyuntivas = self.opcion_disyuntivas.get()
+
+        #Etiquetas distributivas
+        distributivas = self.opcion_distributivas.get()
+
+        if adversativas != "Adversativas":
+            etiqueta = adversativas.split(" - ")[1].replace("(","").replace(")","")
+
+        elif copulativas != "Copulativas":
+            etiqueta = copulativas.split(" - ")[1].replace("(","").replace(")","")
             
-    ## Aqui se podría agregar la nueva función para mostrar el campo de superestructura
-                data = {
-                   "Noticia": "Titular, entrada (resumen breve de la noticia), cuerpo de la noticia (detalles adicionales organizados de lo más importante a lo menos importante), y conclusión o cierre.",
-                    "Notas de enciclopedia": "Título del artículo, definición o descripción inicial, desarrollo del tema (incluye secciones y subsecciones), ejemplos y referencias bibliográficas."
-                    }
-                subtipo = data_dict['document']['metadata']['textual_genre']['@subtype']
-                self.update_metadata_field("superestructura", data[subtipo])
-        except Exception as e:
-            messagebox.showerror("Error al Extraer Metadata", f"No se pudo extraer la metadata del archivo XML: {str(e)}")
+        elif disyuntivas != "Disyuntivas":
+            etiqueta = disyuntivas.split(" - ")[1].replace("(","").replace(")","")
+
+        elif distributivas != "Distributivas":
+            etiqueta = distributivas.split(" - ")[1].replace("(","").replace(")","")
+        else:
+            #warning si no se ha seleccionado ninguna etiqueta
+            messagebox.showwarning("Advertencia", "No se ha seleccionado ninguna etiqueta")
+
+        #Abrir archivo json para agregar las etiquetas
+        with open(name, "r") as read_file:
+            data = json.load(read_file)
+            data["oraciones"]["ind_coordinada"][self.identificador] = etiqueta
+            with open(name, "w") as write_file:
+                json.dump(data, write_file, indent=4)
+
+        #Se agrega el identificador al cuadro de texto self.text_identificadores
+        self.text_identificadores.insert(tk.END, self.identificador + " Cor, ")        
+                    
+        
+        #Se cierra la ventana de etiquetado de oraciones
+        self.tagging_window_coordinada.destroy()
+        
 
 
-    def update_metadata_field(self, field, value):
-        entry = self.metadata_fields.get(field)
-        if entry:
-            entry.config(state=tk.NORMAL)
-            entry.delete(0, tk.END)
-            entry.insert(0, value)
-            entry.config(state=tk.DISABLED)
+
+        return 1
+    
+    
+    def oraciones_independencia_yuxtaposicion(self):
+        #cierra la ventana de etiquetado de oraciones
+        self.tagging_window.destroy()
+
+        #Crea un vantana para etiquetar oraciones con yuxtaposición
+        self.tagging_window_yuxtaposicion = tk.Toplevel(self.root)
+
+        #Pone un título: "Seleccione el tipo de yuxtaposición de las oraciones"
+        tk.Label(self.tagging_window_yuxtaposicion, text="Seleccione el tipo de yuxtaposición de las oraciones", font=("Arial", 14)).pack(pady=10)
+
+        # Crear un marco para organizar los botones en tres columnas
+        button_frame = tk.Frame(self.tagging_window_yuxtaposicion)
+
+        #Crear un espacio de texto para poner la oracion
+        self.text_oracion = tk.Text(self.tagging_window_yuxtaposicion, height=7, width=70, font=("Arial", 12))
+        self.text_oracion.pack(pady=10)
+
+        #Escribir la oracion en el cuadro de texto
+        self.text_oracion.insert(tk.END, self.oracion + "\n\n")
 
 
-    def convert_xml_to_json(self,file_path):
-        if not hasattr(self, 'selected_file_path') or not self.selected_file_path:
-            messagebox.showwarning("Archivo No Seleccionado", "Por favor, seleccione un archivo XML.")
-            return
+        # se organizan los botones en cuatro filas
+        button_frame.pack(pady=20)
 
-        # Intentar convertir XML a JSON
-        try:
-            with open(file_path, 'r', encoding='utf-8') as xml_file:
-                xml_content = xml_file.read()
-                json_data = xmltodict.parse(xml_content, encoding='utf-8', process_namespaces=True)
-        except Exception as e:
-            messagebox.showerror("Error de Conversión", f"No se pudo convertir el archivo XML a JSON: {str(e)}")
-            return
+        # Se crean los botones de yuxtaposición y se organizan en tres filas
 
-        # Pedir al usuario que ingrese el nombre del archivo para guardar
-        filename = "converter_xml.json"
+        #Boton de yuxtaposición por coma (,) - (O_Yuxt_Coma) y se escribe la etiqueta en el cuadro de texto
+        self.btn_yuxtaposicion_coma = tk.Button(button_frame, text="Yuxtaposición por \n coma - (O_Yuxt_Coma)", command= lambda: self.text_oracion.insert(tk.END, "O_Yuxt_Coma, "), borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_yuxtaposicion_coma.grid(row=0, column=0, padx=10, pady=5, sticky="ew")
 
-        # Ruta de destino es la carpeta del archivo XML a la misma direccion de self.selected_file_path
-        save_path = os.path.dirname(self.selected_file_path)
+        #Boton de yuxtaposición por punto y coma (;) - (O_Yuxt_PuntoComa) y se escribe la etiqueta en el cuadro de texto
+        self.btn_yuxtaposicion_punto_coma = tk.Button(button_frame, text="Yuxtaposición por  punto  \n y coma - (O_Yuxt_PuntoComa)", command= lambda: self.text_oracion.insert(tk.END, "O_Yuxt_PuntoComa, "), borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_yuxtaposicion_punto_coma.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
+
+        #Boton de yuxtaposición por dos puntos (:) - (O_Yuxt_DosPuntos) y se escribe la etiqueta en el cuadro de texto
+        self.btn_yuxtaposicion_dos_puntos = tk.Button(button_frame, text="Yuxtaposición por  dos \n puntos - (O_Yuxt_DosPuntos)", command= lambda: self.text_oracion.insert(tk.END, "O_Yuxt_DosPuntos, "), borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_yuxtaposicion_dos_puntos.grid(row=2, column=0, padx=10, pady=5, sticky="ew")
+
+        # Boton de guardar en color verde
+        self.btn_guardar = tk.Button(self.tagging_window_yuxtaposicion, text="Guardar", command=self.guardar_datos_oraciones_yuxtaposicion, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_guardar.pack(pady=5)
+
+        # Boton de cancelar en en color gris
+        self.btn_cancelar = tk.Button(self.tagging_window_yuxtaposicion, text="Cancelar", command=self.tagging_window_yuxtaposicion.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#A9A9A9", fg="white")
+        self.btn_cancelar.pack(pady=5)
 
 
-        if not save_path:
-            return  # El usuario canceló la selección de la carpeta
+    
+        return 1
 
-        # Combinar la ruta y el nombre del archivo
-        full_path = os.path.join(save_path, filename)
+    def guardar_datos_oraciones_yuxtaposicion(self):
 
-        try:
-            with open(full_path, 'w', encoding='utf-8') as json_file:
-                json.dump(json_data, json_file, ensure_ascii=False, indent=4)
-        except Exception as e:
-            messagebox.showerror("Error al Guardar", f"No se pudo guardar el archivo JSON: {str(e)}")
-            return
+        #Abrir archivo json para agregar las etiquetas
+        name = "oraciones.json"
+
+        #etiqueta del cuadro de texto
+        etiquetas = self.text_oracion.get("1.0", tk.END)
+        etiquetas = etiquetas.split("\n\n")[1]
+        etiquetas = etiquetas.split(", ")[0]   
+
+        #Abrir archivo json para agregar las etiquetas
+        with open(name, "r") as read_file:
+            data = json.load(read_file)
+            data["oraciones"]["ind_yuxtaposicion"][self.identificador] = etiquetas
+            with open(name, "w") as write_file:
+                json.dump(data, write_file, indent=4)
+
+        #Se cierra la ventana de etiquetado de oraciones
+        self.tagging_window_yuxtaposicion.destroy()
+
+        #Se agrega el identificador al cuadro de texto self.text_identificadores
+        self.text_identificadores.insert(tk.END, self.identificador + " Yux, ")
+        
+
+
+        return 1
+
+
+    def guardar_datos_oraciones_subordinada(self):
+            
+        #Abrir archivo json para agregar las etiquetas
+        name = "oraciones.json"
+
+        #etiqueta del cuadro de texto
+        etiquetas = self.opcion_sub.get()
+        etiquetas = etiquetas.split(" - ")[1].replace("(","").replace(")","")
+
+        #Abrir archivo json para agregar las etiquetas
+        with open(name, "r") as read_file:
+            data = json.load(read_file)
+            data["oraciones"]["dep_subordinada"][self.identificador] = etiquetas
+            with open(name, "w") as write_file:
+                json.dump(data, write_file, indent=4)
+
+        #Se cierra la ventana de etiquetado de oraciones
+        self.tagging_window_subordinada.destroy()
+
+        #Se agrega el identificador al cuadro de texto self.text_identificadores
+        self.text_identificadores.insert(tk.END, self.identificador + " Sub, ")
+
+        return 1
+
+
+
 
 if __name__ == "__main__":
     root = tk.Tk()
