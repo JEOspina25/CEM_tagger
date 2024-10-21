@@ -9,7 +9,7 @@ import os
 
 class CEMTaggerApp:
     def __init__(self, root):
-        """Inicializa la aplicación de etiquetado CEM Tagger
+        """Inicializa la aplicación de etiquetado SIMuLText
         Organigrama de las ventanas
         root
         |-> tagging_window_paragraphs
@@ -20,13 +20,12 @@ class CEMTaggerApp:
         
         """
         self.root = root
-        self.root.title("CEM Tagger")
+        self.root.title("SIMuLText")
 
         # Crear una etiqueta de bienvenida con el texto adicional
-        welcome_title = "Prototipo de Etiquetado Textual"
+        welcome_title = "SIMuLText"
         welcome_text = ("\n"
-                        "Prototipo en desarrollo para el etiquetado de textos  \n"
-                        "Superestructura, tipo de discurso y oraciones. \n")
++                        "Sistema Informático Multinivel para el etiquetado de corpus a partir de la Lingüística Textual \n")
         self.label_title = tk.Label(root, text=welcome_title, font=("Arial", 24), justify=tk.CENTER)
         self.label_title.pack(pady=10)
 
@@ -71,28 +70,20 @@ class CEMTaggerApp:
         button_frame.columnconfigure(1, weight=1)
 
         # Crear el botón para seleccionar XML
-        self.select_xml_button = tk.Button(button_frame, text="Seleccionar XML", command=self.select_xml, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b082", fg="white")
+        self.select_xml_button = tk.Button(button_frame, text="Seleccionar XML", command=self.select_xml, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#25b060", fg="white")
         self.select_xml_button.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
-
-        # # Crear el botón para convertir XML a JSON
-        # self.convert_button = tk.Button(button_frame, text="Convertir XML a JSON", command=self.convert_xml_to_json, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b082", fg="white")
-        # self.convert_button.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
-
-        # Crear el botón para etiquetar el tipo de discurso
-        self.tag_sentences_button = tk.Button(button_frame, text="Etiquetar Discurso", command=self.etiquetar_discurso, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
-        self.tag_sentences_button.grid(row=0, column=1, columnspan=2, padx=10, pady=10, sticky="ew")
-        
+   
         # Crear el botón para etiquetar parrafos
-        self.tag_sentences_button = tk.Button(button_frame, text="Etiquetar Parrafos", command=self.tag_paragraphs, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
-        self.tag_sentences_button.grid(row=0, column=1, columnspan=2, padx=10, pady=10, sticky="ew")
+        self.tag_sentences_button = tk.Button(button_frame, text="Etiquetado de parrafos \n y tipo de discurso", command=self.tag_paragraphs, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#20B2AA", fg="white")
+        self.tag_sentences_button.grid(row=0, column=1, columnspan=2, padx=10, pady=5, sticky="ew")
     
-            # Crear el botón para etiquetar oraciones
-        self.tag_sentences_button = tk.Button(button_frame, text="Etiquetar Oraciones", command=self.tag_sentences, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
-        self.tag_sentences_button.grid(row=1, column=1, columnspan=2, padx=10, pady=10, sticky="ew")
+        # Crear el botón para etiquetar oraciones
+        self.tag_sentences_button = tk.Button(button_frame, text="Etiquetado de Oraciones", command=self.tag_sentences, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#20B2AA", fg="white")
+        self.tag_sentences_button.grid(row=1, column=1, columnspan=2, padx=10, pady=5, sticky="ew")
 
         #Crear botón de ayuda de color azul
-        self.btn_ayuda = tk.Button(button_frame, text="Ayuda", command=self.ayuda, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#82bfdc", fg="white")
-        self.btn_ayuda.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
+        self.btn_ayuda = tk.Button(button_frame, text="Ayuda", command=self.ayuda, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#B0C4DE", fg="white")
+        self.btn_ayuda.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
 
     def select_xml(self):
@@ -114,7 +105,6 @@ class CEMTaggerApp:
                 data_dict = xmltodict.parse(xml_content, encoding='utf-8', process_namespaces=True)
                 self.title = data_dict['document']['metadata']['title']
                 self.level = data_dict['document']['metadata']['level']
-                print(self.title)
                 # Obtener el tipo y subtipo del género textual
                 text_type = str(data_dict.get('document', {}).get('metadata', {}).get('textual_genre', {}).get('@type', 'N/A') + ', ' + data_dict.get('document', {}).get('metadata', {}).get('textual_genre', {}).get('@subtype', 'N/A'))
                 # Actualizar campos con valores del XML, o 'N/A' si no están presentes
@@ -196,7 +186,9 @@ class CEMTaggerApp:
                                         "3. Etiquete el tipo de discurso \n"
                                         "4. Etiquete las oraciones \n\n"
                                         "Al finalizar se generará un archivo JSON con las etiquetas. \n"
-                                        "Con el nombre del archivo original y la extensión *par_orac.json")
+                                        "Con el nombre del archivo original y las extensiones: \n"
+                                        "par: para los párrafos y discurso\n"
+                                        "orac: para las oraciones \n")
 
 
 
@@ -298,15 +290,17 @@ class CEMTaggerApp:
 
         #Agregar un campo de texto para mostrar los identificadores de los parrafos etiquetados
         self.text_identificadores = tk.Text(main_frame, height=5, width=50, font=("Arial", 12))
-        self.text_identificadores.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+        self.text_identificadores.grid(row=1, column=0, padx=5, pady=2, sticky="ew")
 
         #boton terminar
-        self.btn_terminar = tk.Button(self.tagging_window_paragraphs, text="Terminar", command=self.teminar_parrafos, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
-        self.btn_terminar.pack(pady=5)
+        self.btn_terminar = tk.Button(self.tagging_window_paragraphs, text="Guardar", command=self.teminar_parrafos, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_terminar.pack(pady=2, padx=2)
+
+
 
         for paragraph in paragraphs:
             # Crear un botón dentro del frame scrollable
-            self.botones_parrafo = tk.Button(self.scrollable_frame, text=paragraph, anchor="w", command=lambda text=paragraph: self.procesar_parrafo(text))
+            self.botones_parrafo = tk.Button(self.scrollable_frame, text=paragraph, anchor="w", command=lambda text=paragraph: self.procesar_parrafo(text),bg ="#B0E0E6")
             self.botones_parrafo.pack(fill="both", expand=True)
 
         return 1
@@ -316,6 +310,7 @@ class CEMTaggerApp:
         # Extraer el identificador del párrafo
         self.identificador = parrafo.split(")")[0].replace("(id= p","")
         self.identificador = self.identificador.split(")")[0].replace("(","")
+        self.identificador=self.identificador.replace("id=","")
 
 
 
@@ -405,11 +400,11 @@ class CEMTaggerApp:
         self.text_atributos.insert(tk.END, parrafo + "\n\n")
 
         # Botón de Guardar
-        self.btn_guardar = tk.Button(self.tagging_window, text="Guardar", command=self.guardar_etiquetas_parrafo, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_guardar = tk.Button(self.tagging_window, text="Guardar", command=self.guardar_etiquetas_parrafo, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_guardar.grid(row=11, column=0, pady=10)
 
         # Botón de Cancelar
-        self.btn_cancelar = tk.Button(self.tagging_window, text="Cancelar", command=self.tagging_window.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_cancelar = tk.Button(self.tagging_window, text="Cancelar", command=self.tagging_window.destroy, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#B0C4DE", fg="white")
         self.btn_cancelar.grid(row=11, column=1, pady=10)
 
         return 1
@@ -519,14 +514,14 @@ class CEMTaggerApp:
         self.btn_academico.grid(row=4, column=1, padx=5, pady=5)
 
         # Se crea un campo de texto para mostrar los identificadores de los tipos de discursos seleccionados
-        self.text_identificadores_discurso = tk.Text(self.tagging_discurso, height=8, width=50, font=("Arial", 12))
+        self.text_identificadores_discurso = tk.Text(self.tagging_discurso, height=3, width=50, font=("Arial", 12))
         self.text_identificadores_discurso.pack(pady=10)
 
         # Botones de Guardar y Cancelar
-        self.btn_guardar_discurso = tk.Button(self.tagging_discurso, text="Guardar", command=self.guardar_discurso, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_guardar_discurso = tk.Button(self.tagging_discurso, text="Guardar", command=self.guardar_discurso, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_guardar_discurso.pack(pady=5)
 
-        self.btn_cancelar_discurso = tk.Button(self.tagging_discurso, text="Cancelar", command=self.tagging_discurso.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_cancelar_discurso = tk.Button(self.tagging_discurso, text="Cancelar", command=self.tagging_discurso.destroy, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#B0C4DE", fg="white")
         self.btn_cancelar_discurso.pack(pady=5)
 
         return 1
@@ -606,6 +601,9 @@ class CEMTaggerApp:
 
     def tag_sentences(self):
         """Esta función se encarga de etiquetar las oraciones del texto"""
+        if not hasattr(self, 'selected_file_path') or not self.selected_file_path:
+            messagebox.showwarning("Archivo No Seleccionado", "Por favor, seleccione un archivo XML antes de etiquetar.")
+            return
 
         with open("oraciones.json", "w") as outfile:
             json.dump({"oraciones": {"ind_simple":{},"ind_coordinada" :{},"dep_subordinada":{}, "dep_subordinada":{},"ind_yuxtaposicion":{}}}, outfile, indent=4)
@@ -683,20 +681,20 @@ class CEMTaggerApp:
         self.identificadores = []
 
         #Agregar un campo de texto para mostrar los identificadores de las oraciones etiquetadas
-        self.text_identificadores = tk.Text(main_frame, height=8, width=50, font=("Arial", 12))
+        self.text_identificadores = tk.Text(main_frame, height=4, width=50, font=("Arial", 12))
         self.text_identificadores.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
 
 
 
         #boton terminar 
-        self.btn_terminar = tk.Button(self.tagging_window_sentences, text="Terminar", command=self.terminar, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_terminar = tk.Button(self.tagging_window_sentences, text="Guardar", command=self.terminar, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_terminar.pack(pady=5)
 
 
 
         for oracion in oraciones:
             # Crear un botón dentro del frame scrollable
-            self.botones_oracion = tk.Button(self.scrollable_frame, text=oracion,anchor="w", command=lambda text=oracion: self.procesar_oracion(text))
+            self.botones_oracion = tk.Button(self.scrollable_frame, text=oracion,anchor="w", command=lambda text=oracion: self.procesar_oracion(text), bg = "#B0E0E6")
             self.botones_oracion.pack(fill="both", expand=True)
 
 
@@ -705,7 +703,7 @@ class CEMTaggerApp:
         """Esta función se encarga de guardar las etiquetas de las oraciones en un archivo json y cerrar la ventana de etiquetado de oraciones"""
 
         #Se abre el archivo json convertido para agregar las etiquetas
-        name = "017_B1_INOT_esp_Etiq_par.json"
+        name = str(self.selected_file_path.split(".")[0] + "_par.json")
         etiquetado = "oraciones.json"
 
         #pegar etiquetado al final de name
@@ -786,24 +784,24 @@ class CEMTaggerApp:
         # Se crean los botones con los tipos de independencia de las oraciones y se organizan en tres filas
 
         #Boton de independencia simple
-        self.btn_independencia_simple = tk.Button(button_frame, text="Independencia \n Simple - (O_Simp)", command=self.oraciones_independencia_simple, borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_independencia_simple = tk.Button(button_frame, text="Independencia \n Simple - (O_Simp)", command=self.oraciones_independencia_simple, borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#20B2AA", fg="white")
         self.btn_independencia_simple.grid(row=0, column=0, padx=10, pady=5, sticky="ew")
 
 
         #Boton de independencia coordinada
-        self.btn_independencia_coordinada = tk.Button(button_frame, text="Independencia \n Coordinada - (O_Coord)", command=self.oraciones_independencia_coordinada, borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_independencia_coordinada = tk.Button(button_frame, text="Independencia \n Coordinada - (O_Coord)", command=self.oraciones_independencia_coordinada, borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#20B2AA", fg="white")
         self.btn_independencia_coordinada.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
 
         #Boton de independencia por yuxtaposición
-        self.btn_independencia_yuxtaposicion = tk.Button(button_frame, text="Independencia por \n Yuxtaposición - (O_Yuxt)", command=self.oraciones_independencia_yuxtaposicion, borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_independencia_yuxtaposicion = tk.Button(button_frame, text="Independencia por \n Yuxtaposición - (O_Yuxt)", command=self.oraciones_independencia_yuxtaposicion, borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#20B2AA", fg="white")
         self.btn_independencia_yuxtaposicion.grid(row=2, column=0, padx=10, pady=5, sticky="ew")
 
         # Boton de Dependencia Subordinada
-        self.btn_dependencia_subordinada = tk.Button(button_frame, text="Dependencia \n Subordinada - (O_Sub)", command=self.oraciones_dependencia_subordinada, borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_dependencia_subordinada = tk.Button(button_frame, text="Dependencia \n Subordinada - (O_Sub)", command=self.oraciones_dependencia_subordinada, borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#20B2AA", fg="white")
         self.btn_dependencia_subordinada.grid(row=3, column=0, padx=10, pady=5, sticky="ew")
 
         # Boton de cancelar en en color gris
-        self.btn_cancelar = tk.Button(self.tagging_window, text="Cancelar", command=self.tagging_window.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#A9A9A9", fg="white")
+        self.btn_cancelar = tk.Button(self.tagging_window, text="Cancelar", command=self.tagging_window.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#B0C4DE", fg="white")
         self.btn_cancelar.pack(pady=5)
         
         
@@ -825,25 +823,27 @@ class CEMTaggerApp:
 
         opciones = ["Sustantivas - (O_Sub_Sust)", "Adjetivas o Relativo - (O_Sub_AdjRel)", "Adverbiales - (O_Sub_Adv)"]
 
+
+        #Crear un espacio de texto para poner la oracion
+        self.text_oracion = tk.Text(self.tagging_window_subordinada, height=7, width=70, font=("Arial", 12))
+        self.text_oracion.pack(pady=10)
+
         # Crea un menú desplegable con las opciones
         self.opcion_sub = tk.StringVar(self.tagging_window_subordinada)
         self.opcion_sub.set("Dependencia Subordinada")
         self.menu_sub = tk.OptionMenu(self.tagging_window_subordinada, self.opcion_sub, *opciones)
         self.menu_sub.pack(pady=20)
 
-        #Crear un espacio de texto para poner la oracion
-        self.text_oracion = tk.Text(self.tagging_window_subordinada, height=7, width=70, font=("Arial", 12))
-        self.text_oracion.pack(pady=10)
 
         #Escribir la oracion en el cuadro de texto
         self.text_oracion.insert(tk.END, self.oracion + "\n\n")
 
         # Boton de guardar en color verde
-        self.btn_guardar = tk.Button(self.tagging_window_subordinada, text="Guardar", command=self.guardar_datos_oraciones_subordinada, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_guardar = tk.Button(self.tagging_window_subordinada, text="Guardar", command=self.guardar_datos_oraciones_subordinada, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_guardar.pack(pady=5)
 
         # Boton de cancelar en en color gris
-        self.btn_cancelar = tk.Button(self.tagging_window_subordinada, text="Cancelar", command=self.tagging_window_subordinada.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#A9A9A9", fg="white")
+        self.btn_cancelar = tk.Button(self.tagging_window_subordinada, text="Cancelar", command=self.tagging_window_subordinada.destroy, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#B0C4DE", fg="white")
         self.btn_cancelar.pack(pady=5)
 
 
@@ -878,7 +878,7 @@ class CEMTaggerApp:
 
         # Variables
         hablante = ["Enunciativas  afirmativas - (OS_AH_EA)","Enunciativas  negativas - (OS_AH_EN)","Interrogativas directas totales con sentido literal - (OS_AH_IDTSL)","Interrogativas directas parciales con sentido literal - (OS_AH_IDPSL)",
-                    "Interrogativas disyuntivas - (OS_AH_ID)","Estructura interrogativa con sujeto antepuesto - (OS_AH_ISA)","Interrogativas precedidas de tópico - (OS_AH_IPT)","Exclamativas - (OS_AH_Exc)","Exhortativas-Imperativas - (OS_AH_Exh)","Dubitativas con indicativo - (OS_AH_DI)"
+                    "Interrogativas disyuntivas - (OS_AH_ID)","Estructura interrogativa con sujeto antepuesto - (OS_AH_ISA)","Interrogativas precedidas de tópico - (OS_AH_IPT)","Exclamativas - (OS_AH_Exc)","Exhortativas-Imperativas - (OS_AH_Exh)","Dubitativas con indicativo - (OS_AH_DI)",
                     "Dubitativas con subjuntivo - (OS_AH_DS)"]
         predicado = ["Impersonales con el verbo 'haber' - (OS_NP_IVH)","Copulativas - (OS_NP_C)","Atributivas - (OS_NP_A)","Transitivas - (OS_NP_T)","Intransitivas - (OS_NP_I)","Reflexivas - (OS_NP_R)","Impersonales con el verbo 'haber' - (OS_NP_IVH)","Pasivas perifrásticas - (OS_NP_PP)"]
         frase_enunciado = ["Frase - (Frase)","Enunciado - (enun)"]
@@ -902,11 +902,11 @@ class CEMTaggerApp:
         self.menu_frase.grid(row=2, column=2, padx=10, pady=5, sticky="ew")
 
         # Boton de guardar en color verde
-        self.btn_guardar = tk.Button(self.tagging_window_simple, text="Guardar", command=self.guardar_datos_oraciones_simple, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_guardar = tk.Button(self.tagging_window_simple, text="Guardar", command=self.guardar_datos_oraciones_simple, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_guardar.grid(row=3, column=0, columnspan=3, pady=10)
 
         # Boton de cancelar en en color gris
-        self.btn_cancelar = tk.Button(self.tagging_window_simple, text="Cancelar", command=self.tagging_window_simple.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#A9A9A9", fg="white")
+        self.btn_cancelar = tk.Button(self.tagging_window_simple, text="Cancelar", command=self.tagging_window_simple.destroy, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#B0C4DE", fg="white")
         self.btn_cancelar.grid(row=4, column=0, columnspan=3, pady=10)
 
 
@@ -935,7 +935,7 @@ class CEMTaggerApp:
         #Abrir archivo json para agregar las etiquetas
         with open(name, "r") as read_file:
             data = json.load(read_file)
-            data["oraciones"]["ind_simple"][self.identificador] = etiquetas
+            data["oraciones"]["ind_simple"][str(self.identificador)] = etiquetas
             with open(name, "w") as write_file:
                 json.dump(data, write_file, indent=4)
 
@@ -1007,11 +1007,11 @@ class CEMTaggerApp:
         self.menu_distributivas.grid(row=3, column=1, padx=10, pady=5, sticky="ew")
 
         # Boton de guardar en color verde
-        self.btn_guardar = tk.Button(self.tagging_window_coordinada, text="Guardar", command=self.guardar_datos_oraciones_coordinada, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_guardar = tk.Button(self.tagging_window_coordinada, text="Guardar", command=self.guardar_datos_oraciones_coordinada, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_guardar.grid(row=4, column=0, columnspan=2, pady=10)
 
         # Boton de cancelar en en color gris
-        self.btn_cancelar = tk.Button(self.tagging_window_coordinada, text="Cancelar", command=self.tagging_window_coordinada.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#A9A9A9", fg="white")
+        self.btn_cancelar = tk.Button(self.tagging_window_coordinada, text="Cancelar", command=self.tagging_window_coordinada.destroy, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#B0C4DE", fg="white")
         self.btn_cancelar.grid(row=5, column=0, columnspan=2, pady=10)
 
 
@@ -1096,23 +1096,23 @@ class CEMTaggerApp:
         # Se crean los botones de yuxtaposición y se organizan en tres filas
 
         #Boton de yuxtaposición por coma (,) - (O_Yuxt_Coma) y se escribe la etiqueta en el cuadro de texto
-        self.btn_yuxtaposicion_coma = tk.Button(button_frame, text="Yuxtaposición por \n coma - (O_Yuxt_Coma)", command= lambda: self.text_oracion.insert(tk.END, "O_Yuxt_Coma, "), borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_yuxtaposicion_coma = tk.Button(button_frame, text="Yuxtaposición por \n coma - (O_Yuxt_Coma)", command= lambda: self.text_oracion.insert(tk.END, "O_Yuxt_Coma, "), borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#B0E0E6", fg="white")
         self.btn_yuxtaposicion_coma.grid(row=0, column=0, padx=10, pady=5, sticky="ew")
 
         #Boton de yuxtaposición por punto y coma (;) - (O_Yuxt_PuntoComa) y se escribe la etiqueta en el cuadro de texto
-        self.btn_yuxtaposicion_punto_coma = tk.Button(button_frame, text="Yuxtaposición por  punto  \n y coma - (O_Yuxt_PuntoComa)", command= lambda: self.text_oracion.insert(tk.END, "O_Yuxt_PuntoComa, "), borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_yuxtaposicion_punto_coma = tk.Button(button_frame, text="Yuxtaposición por  punto  \n y coma - (O_Yuxt_PuntoComa)", command= lambda: self.text_oracion.insert(tk.END, "O_Yuxt_PuntoComa, "), borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#B0E0E6", fg="white")
         self.btn_yuxtaposicion_punto_coma.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
 
         #Boton de yuxtaposición por dos puntos (:) - (O_Yuxt_DosPuntos) y se escribe la etiqueta en el cuadro de texto
-        self.btn_yuxtaposicion_dos_puntos = tk.Button(button_frame, text="Yuxtaposición por  dos \n puntos - (O_Yuxt_DosPuntos)", command= lambda: self.text_oracion.insert(tk.END, "O_Yuxt_DosPuntos, "), borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#92c5fc", fg="white")
+        self.btn_yuxtaposicion_dos_puntos = tk.Button(button_frame, text="Yuxtaposición por  dos \n puntos - (O_Yuxt_DosPuntos)", command= lambda: self.text_oracion.insert(tk.END, "O_Yuxt_DosPuntos, "), borderwidth=1, relief="raised", width=25, height=2, font=("Arial", 16), bg="#B0E0E6", fg="white")
         self.btn_yuxtaposicion_dos_puntos.grid(row=2, column=0, padx=10, pady=5, sticky="ew")
 
         # Boton de guardar en color verde
-        self.btn_guardar = tk.Button(self.tagging_window_yuxtaposicion, text="Guardar", command=self.guardar_datos_oraciones_yuxtaposicion, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#25b060", fg="white")
+        self.btn_guardar = tk.Button(self.tagging_window_yuxtaposicion, text="Guardar", command=self.guardar_datos_oraciones_yuxtaposicion, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#25b060", fg="white")
         self.btn_guardar.pack(pady=5)
 
         # Boton de cancelar en en color gris
-        self.btn_cancelar = tk.Button(self.tagging_window_yuxtaposicion, text="Cancelar", command=self.tagging_window_yuxtaposicion.destroy, borderwidth=1, relief="raised", width=35, height=3, font=("Arial", 16), bg="#A9A9A9", fg="white")
+        self.btn_cancelar = tk.Button(self.tagging_window_yuxtaposicion, text="Cancelar", command=self.tagging_window_yuxtaposicion.destroy, borderwidth=1, relief="raised", width=35, height=2, font=("Arial", 16), bg="#B0C4DE", fg="white")
         self.btn_cancelar.pack(pady=5)
 
 
