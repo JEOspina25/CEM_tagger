@@ -120,15 +120,15 @@ class CEMTaggerApp:
                 data = {
                    "Noticia": "Titular, entrada (resumen breve de la noticia), cuerpo de la noticia (detalles adicionales organizados de lo más importante a lo menos importante), y conclusión o cierre.",
                     "Notas de enciclopedia": "Título del artículo, definición o descripción inicial, desarrollo del tema (incluye secciones y subsecciones), ejemplos y referencias bibliográficas.",
-                    "mini cuento": "Introducción (planteamiento de la situación), desarrollo (acción y conflicto), clímax (punto culminante de la historia), y desenlace (resolución del conflicto).",
+                    "Mini cuento": "Introducción (planteamiento de la situación), desarrollo (acción y conflicto), clímax (punto culminante de la historia), y desenlace (resolución del conflicto).",
                     "Columna de opinión": "Título, introducción (presentación del tema y tesis), desarrollo (argumentación y exposición de ideas), y conclusión (resumen y cierre).",
-                    "reseña": "Título, datos bibliográficos (autor, título de la obra, etc.), resumen de la obra, análisis crítico (opinión y valoración), y conclusión.",
-                    "Relato": "Introducción (contextualización del evento), desarrollo (narración de hechos diarios), y desenlace (conclusión o reflexión final).",
+                    "Reseña": "Título, datos bibliográficos (autor, título de la obra, etc.), resumen de la obra, análisis crítico (opinión y valoración), y conclusión.",
+                    "Relato cotidiano": "Introducción (contextualización del evento), desarrollo (narración de hechos diarios), y desenlace (conclusión o reflexión final).",
                     "Teatro":"Actos y escenas, acotaciones (indicaciones sobre el escenario, acciones y gestos), diálogos de los personajes, y en algunos casos, prólogo y epílogo.",
-                    "mito": "Introducción (contexto y personajes), desarrollo (narración de hechos y eventos sobrenaturales), clímax, y desenlace (consecuencias de los eventos).",
+                    "Mito": "Introducción (contexto y personajes), desarrollo (narración de hechos y eventos sobrenaturales), clímax, y desenlace (consecuencias de los eventos).",
                     "Biografía": "Introducción (datos generales del personaje), desarrollo (narración de eventos importantes en la vida del personaje), y conclusión (logros y legado).",
-                    "editorial": "Título, introducción (presentación del tema), desarrollo (exposición de argumentos y puntos de vista), y conclusión (resumen y cierre).",
-                    "cuento": "Introducción (planteamiento de la situación), desarrollo (acción y conflicto), clímax (punto culminante de la historia), y desenlace (resolución del conflicto)."
+                    "Editorial": "Título, introducción (presentación del tema), desarrollo (exposición de argumentos y puntos de vista), y conclusión (resumen y cierre).",
+                    "Cuento": "Introducción (planteamiento de la situación), desarrollo (acción y conflicto), clímax (punto culminante de la historia), y desenlace (resolución del conflicto)."
                     }
                 subtipo = data_dict['document']['metadata']['textual_genre']['@subtype']
                 self.update_metadata_field("superestructura", data[subtipo])
